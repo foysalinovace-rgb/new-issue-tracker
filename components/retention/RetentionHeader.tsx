@@ -1,0 +1,4 @@
+import React from 'react';
+import { Download, PhoneCall, Plus } from 'lucide-react';
+import { retentionService } from '../../services/retentionService';
+export const RetentionHeader: React.FC<{ onOpenLogCall?: () => void; onOpenAddCustomer?: () => void }> = ({ onOpenLogCall, onOpenAddCustomer }) => <div className="retention-workspace-tools"><div className="retention-tool-actions"><span>RELATIONSHIP TOOLS</span><div><button type="button" onClick={() => retentionService.exportFullRetentionReport()}><Download size={13} />Excel export</button>{onOpenLogCall && <button type="button" onClick={onOpenLogCall}><PhoneCall size={13} />Log call</button>}{onOpenAddCustomer && <button type="button" className="tool-primary" onClick={onOpenAddCustomer}><Plus size={14} />Add customer</button>}</div></div></div>;

@@ -1,0 +1,5 @@
+{
+  "name": "Issue Tracker",
+  "description": "A comprehensive issue tracking and system downtime analytics dashboard featuring real-time reporting, monthly aggregate data management, and interactive data visualizations.",
+  "requestFramePermissions": []
+}

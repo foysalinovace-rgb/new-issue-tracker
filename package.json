@@ -1,0 +1,49 @@
+{
+  "name": "issue-tracker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit",
+    "test:ui": "node scripts/verify-ui.mjs",
+    "test:modules": "node scripts/verify-modules.mjs",
+    "test:filters": "node scripts/verify-filters.mjs",
+    "test:appearance": "node scripts/verify-dark-and-edit.mjs",
+    "test:feedback-exports": "node --import tsx scripts/verify-feedback-exports.mjs",
+    "test:auth:ui": "node scripts/verify-login.mjs",
+    "test:auth:server": "node --import tsx scripts/verify-server-auth.mjs",
+    "test:excel-layout": "node scripts/verify-excel-layout.mjs",
+    "setup:admin": "node scripts/setup-admin.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.101.1",
+    "@types/express": "^5.0.6",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "googleapis": "^171.4.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^0.563.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.0",
+    "recharts": "^3.7.0",
+    "tsx": "^4.21.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.6.2",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}

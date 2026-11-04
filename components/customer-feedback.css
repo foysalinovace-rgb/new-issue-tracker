@@ -1,0 +1,27 @@
+.feedback-page { min-height: 100dvh; color: #24343e; color-scheme: light; background: #f4f8fb; }
+.feedback-page > div { background: radial-gradient(ellipse at 10% 0%, #e3f3ef 0%, transparent 45%), radial-gradient(ellipse at 100% 15%, #e9ecff 0%, transparent 40%), #f4f8fb; }
+.feedback-page button, .feedback-page input, .feedback-page textarea { font: inherit; }
+.feedback-page button { touch-action: manipulation; }
+.feedback-page form { box-shadow: 0 16px 55px #233a5010; border-color: #e0e8ee; }
+.feedback-page input, .feedback-page textarea { color: #24343e; color-scheme: light; }
+.feedback-page .feedback-intro { text-align: center; padding: 10px 12px 4px; }
+.feedback-intro > span { display: inline-block; font-size: 38px; margin-bottom: 12px; }
+.feedback-intro h1 { color: #192f3c; font-size: clamp(25px, 4vw, 34px); font-weight: 800; line-height: 1.4; letter-spacing: -.7px; }
+.feedback-intro p { color: #687b89; font-size: 14px; margin-top: 9px; line-height: 1.7; }
+.feedback-ratings button { min-width: 0; padding: 15px 6px; justify-content: flex-start; }
+.feedback-ratings button:hover { transform: translateY(-3px); box-shadow: 0 6px 16px #2443500b; }
+.feedback-ratings button[aria-pressed="true"] { transform: translateY(-3px); }
+.feedback-ratings .rating-emoji { font-size: 36px; line-height: 1.3; margin-bottom: 4px; }
+.feedback-ratings button > div:last-child { min-height: 45px; }
+.feedback-page button:focus-visible { outline: 3px solid #16766a; outline-offset: 4px; }
+@media (max-width: 520px) {
+  .feedback-page form { padding: 22px 16px; border-radius: 22px; }
+  .feedback-page .feedback-ratings { gap: 5px; }
+  .feedback-ratings button { padding: 12px 3px; border-radius: 12px; gap: 6px; }
+  .feedback-ratings .rating-emoji { font-size: 28px; }
+  .feedback-ratings .rating-stars { display: none; }
+  .feedback-ratings button > div:last-child > div:first-child { font-size: 11px; }
+  .feedback-ratings button > div:last-child > div:last-child { display: none; }
+  .feedback-ratings button > div:last-child { min-height: 28px; }
+  .feedback-page > div > .max-w-3xl > div:first-child { flex-wrap: wrap; gap: 12px; }
+}
