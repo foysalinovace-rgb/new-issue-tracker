@@ -14,8 +14,14 @@ async function request(path: string, body?: Record<string, unknown>) {
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error || 'Could not verify your session.');
+  const text = await response.text();
+  let result: any = null;
+  try {
+    result = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(response.ok ? 'Server returned invalid response.' : 'Server connection failed. Please try again.');
+  }
+  if (!response.ok) throw new Error(result?.error || 'Could not verify your session.');
   return result;
 }
 function announce() {

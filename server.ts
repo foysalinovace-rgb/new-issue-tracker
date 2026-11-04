@@ -143,6 +143,7 @@ async function startServer() {
       server: { 
         middlewareMode: true,
         hmr: false,
+        allowedHosts: true,
         fs: { deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/supabase/**', '**/scripts/**', '**/data/**', '**/server/**', '**/server.ts'] }
       },
       appType: 'spa',
