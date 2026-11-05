@@ -120,7 +120,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
       </header>
       <main className="page-content" id="main-content" key={location.pathname}>{children}</main>
-      <footer className="app-footer"><span>{branding.brand_name} <span className="footer-separator">/</span> Operations, connected.</span><span>{branding.subtitle}</span></footer>
+      <footer className="app-footer"><span>Inovace Technologies Ltd.</span></footer>
     </div>
     
   </div>;

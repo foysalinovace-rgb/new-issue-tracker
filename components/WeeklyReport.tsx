@@ -355,7 +355,7 @@ const WeeklyReport: React.FC = () => {
             <p className="text-slate-500 font-bold mt-1">Range: {fromDate} to {toDate}</p>
           </div>
           <div className="text-right">
-            <div className="text-indigo-600 font-black text-xl">INOVACE</div>
+            <div className="text-indigo-600 font-black text-xl">Inovace Technologies Ltd.</div>
             <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Issue Tracking System</div>
           </div>
         </div>

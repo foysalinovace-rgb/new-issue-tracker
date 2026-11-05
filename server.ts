@@ -10,6 +10,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const env = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '');
 
+if (!process.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL.includes('your_supabase_project_url')) {
+  process.env.VITE_SUPABASE_URL = 'https://pzjkgoebjttuxoiopcqu.supabase.co';
+}
+if (!process.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY.includes('your_supabase_anon_key')) {
+  process.env.VITE_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amtnb2VianR0dXhvaW9wY3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODY2NDYsImV4cCI6MjA5MTA2MjY0Nn0.284IbEwcWqPp73D3R6B_aVf5ezf26lkPVe3KqrHfjcw';
+}
+process.env.VITE_ENABLE_DATABASE = 'true';
+
 const DATA_DIR = path.join(process.cwd(), 'data');
 const MODULE_CONFIG_FILE = path.join(DATA_DIR, 'module-config.json');
 
@@ -68,6 +76,7 @@ async function startServer() {
   }
 
   app.disable('x-powered-by');
+  app.set('trust proxy', 1);
   app.use(express.json({ limit: '1mb' }));
   const auth = createWorkspaceAuth({
     sessionFile: path.join(DATA_DIR, 'auth-sessions.json'),

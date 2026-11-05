@@ -187,13 +187,6 @@ button:disabled { cursor: not-allowed; }
 .page-content label.uppercase { font-size: 10px; font-weight: 600; letter-spacing: .4px; text-transform: none; }
 @media (max-width: 767px) { .module-header-main { flex-direction: column; align-items: flex-start; } .module-tabs { gap: 21px; } .module-header-main p { line-height: 1.6; } }
 
-/* Light navigation uses a soft sky-blue surface; dark navigation stays neutral. */
-html:not(.dark) .app-sidebar { background: #edf7ff; border-right-color: #d5e8f5; }
-html:not(.dark) .app-sidebar .workspace-switch { background: #ffffff99; border-color: #d5e8f5; }
-html:not(.dark) .app-sidebar .workspace-avatar, html:not(.dark) .app-sidebar .nav-item kbd { background: #f8fcff; border-color: #cfe4f3; }
-html:not(.dark) .app-sidebar .nav-item:hover { background: #dff0fc; }
-html:not(.dark) .app-sidebar .nav-item.is-active { background: #d6ecf5; color: #155e56; }
-html:not(.dark) .app-sidebar .nav-section-label { color: #7a98ad; }
 /* Native dropdown menus must use the same theme as their closed control. */
 html.dark select, html.dark select.v2-control { color-scheme: dark; background-color: #1d292f !important; color: #e5edef !important; border-color: #2b363e !important; }
 html.dark select option, html.dark select optgroup { background-color: #182127 !important; color: #e5edef !important; }
@@ -201,10 +194,178 @@ html.dark select option:checked { background-color: #1c3934 !important; color: #
 html:not(.dark) select option, html:not(.dark) select optgroup { background-color: #fff !important; color: #25313b !important; }
 html:not(.dark) select option:checked { background-color: #eff8f7 !important; color: #155e56 !important; }
 
-/* Soft indigo navigation in light mode. */
-html:not(.dark) .app-sidebar { background: #eef0ff; border-right-color: #dcdff5; }
-html:not(.dark) .app-sidebar .nav-item:hover { background: #e3e7fc; }
-html:not(.dark) .app-sidebar .nav-item.is-active { background: #dfe4fa; color: #155e56; }
-html:not(.dark) .app-sidebar .nav-item kbd { background: #f8f9ff; border-color: #d3d9f4; }
-html:not(.dark) .app-sidebar .nav-section-label { color: #8b91ad; }
-.app-sidebar .brand-lockup { margin-bottom: 6px; }
+/* ==========================================================================
+   Indigo Theme for Sidebar and Header in Light Mode
+   ========================================================================== */
+
+/* ==========================================================================
+   Light Purple Theme for Sidebar and Header in Light Mode
+   ========================================================================== */
+
+/* Topbar / Header in Light Mode */
+html:not(.dark) .app-topbar {
+  background: #f5f0ff;
+  border-bottom: 1px solid #e4d7fb;
+  color: #3b0764;
+  box-shadow: 0 1px 3px rgba(126, 34, 206, 0.05);
+}
+html:not(.dark) .app-topbar .topbar-location {
+  color: #581c87;
+}
+html:not(.dark) .app-topbar .topbar-location strong {
+  color: #3b0764;
+  font-weight: 600;
+}
+html:not(.dark) .app-topbar .breadcrumb-section {
+  color: #7e22ce;
+}
+html:not(.dark) .app-topbar .breadcrumb-divider {
+  color: #a855f7;
+}
+html:not(.dark) .app-topbar .icon-button {
+  color: #6b21a8;
+}
+html:not(.dark) .app-topbar .icon-button:hover {
+  background: #ede4fb;
+  color: #3b0764;
+}
+html:not(.dark) .app-topbar .admin-button {
+  border-left-color: #d8b4fe;
+  color: #581c87;
+}
+html:not(.dark) .app-topbar .admin-button:hover {
+  background: #ede4fb;
+  color: #3b0764;
+}
+html:not(.dark) .app-topbar .workspace-search {
+  color: #7e22ce;
+}
+html:not(.dark) .app-topbar .workspace-search kbd {
+  border-color: #d8b4fe;
+  background: #ffffff;
+  color: #6b21a8;
+}
+html:not(.dark) .app-topbar .local-pill {
+  background: #ede4fb;
+  color: #6b21a8;
+  border: 1px solid #d8b4fe;
+}
+
+/* Sidebar in Light Mode */
+html:not(.dark) .app-sidebar {
+  background: #f8f4ff;
+  border-right: 1px solid #e4d7fb;
+  color: #3b0764;
+  box-shadow: 2px 0 8px rgba(126, 34, 206, 0.04);
+}
+html:not(.dark) .app-sidebar .brand-lockup {
+  margin-bottom: 6px;
+}
+html:not(.dark) .app-sidebar .brand-lockup strong {
+  color: #3b0764;
+}
+html:not(.dark) .app-sidebar .brand-lockup small {
+  color: #7e22ce;
+}
+html:not(.dark) .app-sidebar .brand-mark {
+  background: #9333ea;
+  color: #ffffff;
+  border: 1px solid #7e22ce;
+  box-shadow: 0 2px 5px rgba(147, 51, 234, 0.2);
+}
+html:not(.dark) .app-sidebar .mobile-close {
+  color: #6b21a8;
+}
+html:not(.dark) .app-sidebar .mobile-close:hover {
+  color: #3b0764;
+}
+html:not(.dark) .app-sidebar .workspace-switch {
+  background: #ffffff;
+  border-color: #e4d7fb;
+  color: #3b0764;
+}
+html:not(.dark) .app-sidebar .workspace-switch strong {
+  color: #3b0764;
+}
+html:not(.dark) .app-sidebar .workspace-switch small {
+  color: #7e22ce;
+}
+html:not(.dark) .app-sidebar .workspace-switch > svg {
+  color: #9333ea;
+}
+html:not(.dark) .app-sidebar .workspace-avatar {
+  background: #ede4fb;
+  color: #7e22ce;
+  border-color: #d8b4fe;
+}
+html:not(.dark) .app-sidebar .nav-section-label {
+  color: #7e22ce;
+  font-weight: 600;
+  letter-spacing: 1.25px;
+}
+html:not(.dark) .app-sidebar .nav-section-label.group-toggle {
+  color: #7e22ce;
+}
+html:not(.dark) .app-sidebar .nav-section-label.group-toggle:hover {
+  color: #3b0764;
+}
+html:not(.dark) .app-sidebar .nav-item {
+  color: #581c87;
+}
+html:not(.dark) .app-sidebar .nav-item svg {
+  color: #7e22ce;
+  transition: color .15s ease;
+}
+html:not(.dark) .app-sidebar .nav-item:hover {
+  background: #ede4fb;
+  color: #3b0764;
+}
+html:not(.dark) .app-sidebar .nav-item:hover svg {
+  color: #581c87;
+}
+html:not(.dark) .app-sidebar .nav-item.is-active {
+  background: #e9d5ff;
+  color: #4c1d95;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(147, 51, 234, 0.12);
+}
+html:not(.dark) .app-sidebar .nav-item.is-active svg {
+  color: #7e22ce;
+}
+html:not(.dark) .app-sidebar .nav-item.is-active::before {
+  background: #9333ea;
+}
+html:not(.dark) .app-sidebar .nav-item kbd {
+  background: #ffffff;
+  border-color: #d8b4fe;
+  color: #6b21a8;
+}
+html:not(.dark) .app-sidebar .sidebar-bottom {
+  border-top-color: #e4d7fb;
+}
+html:not(.dark) .app-sidebar .local-card strong {
+  color: #3b0764;
+}
+html:not(.dark) .app-sidebar .local-card small {
+  color: #7e22ce;
+}
+html:not(.dark) .app-sidebar .local-icon {
+  background: #ede4fb;
+  color: #7e22ce;
+}
+html:not(.dark) .app-sidebar .profile-link {
+  border-top-color: #e4d7fb;
+}
+html:not(.dark) .app-sidebar .profile-link strong {
+  color: #3b0764;
+}
+html:not(.dark) .app-sidebar .profile-link small {
+  color: #7e22ce;
+}
+html:not(.dark) .app-sidebar .profile-link > svg {
+  color: #9333ea;
+}
+html:not(.dark) .app-sidebar .profile-avatar {
+  background: #ede4fb;
+  color: #7e22ce;
+}

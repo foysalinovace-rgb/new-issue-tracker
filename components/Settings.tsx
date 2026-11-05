@@ -186,7 +186,7 @@ const Settings: React.FC = () => {
   };
 
   const handleResetToDefault = async () => {
-    if (confirm('Reset branding to default "Issue Tracker" and "INOVACE"?')) {
+    if (confirm('Reset branding to default "Issue Tracker" and "Inovace Technologies Ltd."?')) {
       setIsSavingBranding(true);
       try {
         const updated = await dbService.saveBranding(DEFAULT_BRANDING);
@@ -281,7 +281,7 @@ const Settings: React.FC = () => {
                         type="text"
                         value={brandingForm.subtitle}
                         onChange={(e) => setBrandingForm({ ...brandingForm, subtitle: e.target.value })}
-                        placeholder="e.g. INOVACE"
+                        placeholder="e.g. Inovace Technologies Ltd."
                         className="v2-control w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white text-sm"
                       />
                       <span className="text-[11px] text-slate-400 dark:text-slate-500">

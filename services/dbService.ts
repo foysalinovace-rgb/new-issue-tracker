@@ -5,7 +5,7 @@ import { supabase, isLocalMode } from '../lib/supabase';
 export const DEFAULT_BRANDING: BrandingConfig = {
   id: 'default',
   brand_name: 'Issue Tracker',
-  subtitle: 'INOVACE',
+  subtitle: 'Inovace Technologies Ltd.',
   logo_url: null,
 };
 
@@ -591,7 +591,11 @@ export const dbService = {
     try {
       const cached = localStorage.getItem('app_branding');
       if (cached) {
-        return { ...DEFAULT_BRANDING, ...JSON.parse(cached) };
+        const parsed = JSON.parse(cached);
+        if (parsed.subtitle === 'INOVACE' || parsed.subtitle === 'Inovace') {
+          parsed.subtitle = 'Inovace Technologies Ltd.';
+        }
+        return { ...DEFAULT_BRANDING, ...parsed };
       }
     } catch (e) {}
     return DEFAULT_BRANDING;
@@ -610,10 +614,14 @@ export const dbService = {
       }
 
       if (data) {
+        let sub = data.subtitle !== undefined ? data.subtitle : DEFAULT_BRANDING.subtitle;
+        if (sub === 'INOVACE' || sub === 'Inovace') {
+          sub = 'Inovace Technologies Ltd.';
+        }
         const branding: BrandingConfig = {
           id: data.id || 'default',
           brand_name: data.brand_name || DEFAULT_BRANDING.brand_name,
-          subtitle: data.subtitle !== undefined ? data.subtitle : DEFAULT_BRANDING.subtitle,
+          subtitle: sub,
           logo_url: data.logo_url || null,
           updated_at: data.updated_at
         };

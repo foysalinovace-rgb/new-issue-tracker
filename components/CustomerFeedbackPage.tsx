@@ -465,8 +465,8 @@ export const CustomerFeedbackPage: React.FC = () => {
         {/* Footer */}
         <div className="text-center py-4 text-xs text-slate-400">
           {lang === 'bn' 
-            ? `© ${toBanglaNumber(new Date().getFullYear())} টিপসই • ইনোভেস টেকনোলজিস • সর্বস্বত্ব সংরক্ষিত`
-            : `© ${new Date().getFullYear()} Tipsoi • Inovace Technologies • All rights reserved`}
+            ? `© ${toBanglaNumber(new Date().getFullYear())} টিপসই • ইনোভেস টেকনোলজিস লিমিটেড • সর্বস্বত্ব সংরক্ষিত`
+            : `© ${new Date().getFullYear()} Tipsoi • Inovace Technologies Ltd. • All rights reserved`}
         </div>
       </div></FeedbackShell>
     );
@@ -551,8 +551,8 @@ export const CustomerFeedbackPage: React.FC = () => {
         {/* Footer */}
         <div className="text-center py-4 text-xs text-slate-400">
           {lang === 'bn' 
-            ? `© ${toBanglaNumber(new Date().getFullYear())} টিপসই • ইনোভেস টেকনোলজিস • সর্বস্বত্ব সংরক্ষিত`
-            : `© ${new Date().getFullYear()} Tipsoi • Inovace Technologies • All rights reserved`}
+            ? `© ${toBanglaNumber(new Date().getFullYear())} টিপসই • ইনোভেস টেকনোলজিস লিমিটেড • সর্বস্বত্ব সংরক্ষিত`
+            : `© ${new Date().getFullYear()} Tipsoi • Inovace Technologies Ltd. • All rights reserved`}
         </div>
       </div></FeedbackShell>
     );
@@ -836,8 +836,8 @@ export const CustomerFeedbackPage: React.FC = () => {
       {/* Footer */}
       <div className="text-center py-6 text-xs text-slate-400">
         {lang === 'bn' 
-          ? `© ${toBanglaNumber(new Date().getFullYear())} টিপসই • ইনোভেস টেকনোলজিস • সর্বস্বত্ব সংরক্ষিত`
-          : `© ${new Date().getFullYear()} Tipsoi • Inovace Technologies • All rights reserved`}
+          ? `© ${toBanglaNumber(new Date().getFullYear())} টিপসই • ইনোভেস টেকনোলজিস লিমিটেড • সর্বস্বত্ব সংরক্ষিত`
+          : `© ${new Date().getFullYear()} Tipsoi • Inovace Technologies Ltd. • All rights reserved`}
       </div>
     </div></FeedbackShell>
   );

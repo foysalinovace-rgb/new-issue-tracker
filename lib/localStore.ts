@@ -108,4 +108,34 @@ export const localStore = {
   from: (table: string) => new LocalQuery(table),
   channel: (_name: string) => new LocalChannel(),
   removeChannel: (channel: LocalChannel) => channel.unsubscribe(),
+  rpc: async (fn: string, params?: any) => {
+    try {
+      if (fn === 'get_public_issue_feedback') {
+        const issues = read('issues');
+        const found = issues.find(i => i.id === params?.p_issue_id);
+        return { data: found || null, error: null };
+      }
+      if (fn === 'submit_public_issue_feedback') {
+        const issues = read('issues');
+        const idx = issues.findIndex(i => i.id === params?.p_issue_id);
+        if (idx !== -1) {
+          issues[idx] = {
+            ...issues[idx],
+            feedback_rating: params?.p_rating,
+            feedback_comment: params?.p_comment,
+            feedback_date: params?.p_feedback_date,
+            status: params?.p_resolved === 'Yes' ? 'Close' : issues[idx].status,
+          };
+          localStorage.setItem(PREFIX + 'issues', JSON.stringify(issues));
+          window.dispatchEvent(new CustomEvent('local-data-changed', { detail: { table: 'issues' } }));
+        }
+        return { data: null, error: null };
+      }
+      if (fn === 'get_public_branding') {
+        const rows = read('branding_settings');
+        return { data: rows[0] || null, error: null };
+      }
+    } catch {}
+    return { data: null, error: null };
+  },
 };
