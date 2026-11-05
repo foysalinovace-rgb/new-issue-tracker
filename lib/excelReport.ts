@@ -56,7 +56,6 @@ function displayText(cell: Cell): string {
   return String(cell.text || '').replace(/\r\n?/g, '\n');
 }
 
-/** Professional Excel Report Generator with Automatic Cell Fitting */
 export async function createStyledReport(source: WorkBook, options: { template?: boolean } = {}): Promise<Workbook> {
   const ExcelJS = await import('exceljs');
   const workbook = new ExcelJS.default.Workbook();
@@ -64,31 +63,23 @@ export async function createStyledReport(source: WorkBook, options: { template?:
   workbook.creator = 'Inovace Technologies Ltd.';
   workbook.created = new Date();
   workbook.calcProperties.fullCalcOnLoad = true;
-  const generated = new Date().toLocaleString('en-GB');
 
   for (const sheet of workbook.worksheets) {
     const columnCount = Math.max(sheet.columnCount, 2);
-    const originalRows = sheet.rowCount;
     const summary = /summary/i.test(sheet.name);
-    const hasFormulas = Object.values(source.Sheets[sheet.name] || {}).some(cell => cell && typeof cell === 'object' && 'f' in cell);
-    
-    // Top Report Banner (Sleek 1-row header bar with brand and timestamp)
-    const showBanner = !summary && !options.template && !hasFormulas && originalRows > 0;
-    if (showBanner) {
-      sheet.insertRows(1, [
-        [`${sheet.name.toUpperCase()}  •  Inovace Technologies Ltd.  •  Generated: ${generated}  •  ${Math.max(0, originalRows - 1)} records`],
-      ]);
-    }
-    const headerRow = showBanner ? 2 : 1;
 
-    // Sheet View & Gridlines
+    // Modern clean format: Table headers start directly at Row 1
+    // (No disruptive merged banner rows that break sorting, filtering, or row selection in Excel)
+    const headerRow = 1;
+
+    // Freeze top header row and keep native Excel gridlines visible
     sheet.views = [
       {
         state: 'frozen',
         ySplit: headerRow,
         xSplit: 0,
-        showGridLines: true, // Gridlines must be visible for crisp readability
-        zoomScale: 100,      // 100% natural display zoom
+        showGridLines: true, // Crisp row and column gridlines
+        zoomScale: 100,      // Natural 100% zoom
       }
     ];
 
@@ -101,11 +92,14 @@ export async function createStyledReport(source: WorkBook, options: { template?:
       fitToHeight: 0,
       horizontalCentered: true,
       margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 },
-      printTitlesRow: `${headerRow}:${headerRow}`
+      printTitlesRow: '1:1'
     };
-    sheet.headerFooter = { oddFooter: `&LInovace Technologies Ltd.&C${sheet.name.replaceAll('&', '&&')}&RPage &P of &N` };
+    sheet.headerFooter = {
+      oddHeader: `&L&BInovace Technologies Ltd.&R&B${sheet.name.replaceAll('&', '&&')}`,
+      oddFooter: `&LConfidential&CPage &P of &N&R${new Date().toLocaleDateString('en-GB')}`
+    };
 
-    // Get Headings
+    // Extract Headings
     const headings: string[] = [];
     for (let c = 1; c <= columnCount; c++) {
       headings.push(String(sheet.getCell(headerRow, c).value ?? '').replace(/\s+/g, ' ').trim());
@@ -115,29 +109,19 @@ export async function createStyledReport(source: WorkBook, options: { template?:
       /details|description|findings|notes|comments?|reason|address|products summary|items|all issues/i.test(heading)
     );
 
-    // Style banner row if present
-    if (showBanner) {
-      sheet.mergeCells(1, 1, 1, columnCount);
-      const bannerCell = sheet.getCell(1, 1);
-      bannerCell.fill = fill(colors.navy);
-      bannerCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFE2E8F0' } };
-      bannerCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
-      sheet.getRow(1).height = 26;
-    }
-
-    // Measure column widths to guarantee PERFECT auto-fit without manual resizing
+    // Compute generous column widths to ensure NO text is clipped and NO cell needs manual resizing
     const colMaxWidths = new Array<number>(columnCount).fill(12);
 
     for (let col = 1; col <= columnCount; col++) {
       const heading = headings[col - 1] || '';
       const isNarrative = narrativeColumns[col - 1];
 
-      // Header width requires extra padding for the Excel AutoFilter dropdown button (+5 chars)
-      let maxCharWidth = Math.ceil(estimateTextWidth(heading) + 5.5);
+      // Header width requires extra padding for the Excel AutoFilter dropdown button (+6 chars)
+      let maxCharWidth = Math.ceil(estimateTextWidth(heading) + 6);
 
       if (isNarrative) {
-        // Narrative columns wrap comfortably between 45 and 65
-        colMaxWidths[col - 1] = Math.max(maxCharWidth, 50);
+        // Generous, comfortable paragraph width for narrative/details
+        colMaxWidths[col - 1] = Math.max(maxCharWidth, 55);
         continue;
       }
 
@@ -148,20 +132,20 @@ export async function createStyledReport(source: WorkBook, options: { template?:
         const text = displayText(cell);
         if (!text) return;
 
-        // Split multi-line cells
+        // Split multi-line cells and measure max line width
         const lines = text.split('\n');
         for (const line of lines) {
-          const w = Math.ceil(estimateTextWidth(line) + 3.5);
+          const w = Math.ceil(estimateTextWidth(line) + 4);
           if (w > maxCharWidth) maxCharWidth = w;
         }
       });
 
-      // Category-based minimums for visual balance
+      // Practical category minimums so numbers, dates and names have breathing space
       let minW = 14;
       if (/^sl\b|^#\b|^id\b/i.test(heading)) minW = 10;
       else if (/date|time/i.test(heading)) minW = 16;
-      else if (/client|company|customer/i.test(heading)) minW = 28;
-      else if (/assigned|person|handler|rep|sold by|called by/i.test(heading)) minW = 22;
+      else if (/client|company|customer/i.test(heading)) minW = 30;
+      else if (/assigned|person|handler|rep|sold by|called by/i.test(heading)) minW = 24;
       else if (/satisfaction|rating|resolved/i.test(heading)) minW = 20;
       else if (/fee|price|revenue|amount|value|mrr|discount/i.test(heading)) minW = 18;
       else if (/status|priority|category|segment|type/i.test(heading)) minW = 18;
@@ -169,17 +153,24 @@ export async function createStyledReport(source: WorkBook, options: { template?:
       colMaxWidths[col - 1] = Math.max(minW, Math.min(65, maxCharWidth));
     }
 
-    // Apply column widths
+    // Apply auto-fitted column widths
     for (let col = 1; col <= columnCount; col++) {
       sheet.getColumn(col).width = colMaxWidths[col - 1];
     }
 
-    // Format and style all cells
-    sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-      if (showBanner && rowNumber === 1) return;
+    // Set Header Row Height (clean, comfortable, professional)
+    sheet.getRow(headerRow).height = 28;
 
+    // Format all cells and borders
+    sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
       const isHeader = rowNumber === headerRow;
-      let maxLineCountInRow = 1;
+
+      // DO NOT set custom row height on data rows!
+      // When row.height is left undefined, Microsoft Excel and all spreadsheet engines
+      // automatically calculate the exact, perfect pixel height for every row to fit all text!
+      if (!isHeader) {
+        delete (row as any).height;
+      }
 
       for (let col = 1; col <= columnCount; col++) {
         const cell = row.getCell(col);
@@ -192,7 +183,8 @@ export async function createStyledReport(source: WorkBook, options: { template?:
         const isMoneyCol = /(?:revenue|amount|price|fee|value|mrr|billing|paid|due|bdt|discount)/i.test(heading);
         const isCenterCol = /^sl\b|^#\b|status|priority|rating|resolved/i.test(heading);
 
-        const edge = { style: 'thin' as const, color: { argb: colors.line } };
+        // Crisp, visible Slate 300 border so every row line is clearly demarcated
+        const edge = { style: 'thin' as const, color: { argb: 'FFCBD5E1' } };
         cell.border = { top: edge, bottom: edge, left: edge, right: edge };
 
         if (isHeader) {
@@ -204,12 +196,12 @@ export async function createStyledReport(source: WorkBook, options: { template?:
             wrapText: false,
           };
         } else {
-          // Data Row
+          // Data Row: subtle alternating zebra striping
           const isAlternate = rowNumber % 2 === 0;
           cell.fill = fill(isAlternate ? colors.stripe : colors.white);
           cell.font = { name: 'Calibri', size: 10.5, color: { argb: colors.ink } };
 
-          // Auto-format dates
+          // Format dates
           if (isDateCol && typeof cell.value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(cell.value)) {
             const dateVal = new Date(cell.value);
             if (!isNaN(dateVal.getTime())) {
@@ -220,34 +212,22 @@ export async function createStyledReport(source: WorkBook, options: { template?:
             cell.numFmt = 'dd-mmm-yyyy';
           }
 
-          // Auto-format currency
+          // Format currency
           if (isMoneyCol && isNumeric) {
             cell.numFmt = '"৳" #,##0.00';
           } else if (isNumeric && (!cell.numFmt || cell.numFmt === 'General')) {
             cell.numFmt = Number.isInteger(cell.value) ? '#,##0' : '#,##0.00';
           }
 
-          // Percentage format
+          // Format percentages
           if (typeof cell.value === 'string' && /^-?\d+(\.\d+)?%$/.test(cell.value)) {
             cell.value = parseFloat(cell.value) / 100;
             cell.numFmt = '0.0%';
           }
 
-          // Wrapping for narrative or multi-line cells
+          // Text alignment and wrapping
           const text = displayText(cell);
           const shouldWrap = isNarrative || text.includes('\n');
-
-          if (shouldWrap) {
-            const colW = colMaxWidths[col - 1] || 50;
-            const explicitLines = text.split('\n');
-            let estimatedLines = 0;
-            for (const l of explicitLines) {
-              estimatedLines += Math.max(1, Math.ceil(estimateTextWidth(l) / (colW - 2)));
-            }
-            if (estimatedLines > maxLineCountInRow) {
-              maxLineCountInRow = estimatedLines;
-            }
-          }
 
           cell.alignment = {
             vertical: shouldWrap ? 'top' : 'middle',
@@ -259,20 +239,9 @@ export async function createStyledReport(source: WorkBook, options: { template?:
           styleStatus(cell);
         }
       }
-
-      // Dynamic Row Height
-      if (isHeader) {
-        row.height = 30; // Comfortable header height
-      } else {
-        if (maxLineCountInRow > 1) {
-          row.height = Math.min(MAX_ROW_HEIGHT, Math.max(24, maxLineCountInRow * 17 + 8));
-        } else {
-          row.height = 23; // Clean standard row height (fits content naturally)
-        }
-      }
     });
 
-    // AutoFilter on the table headers
+    // AutoFilter on the table headers (Row 1)
     if (!summary && sheet.rowCount >= headerRow) {
       sheet.autoFilter = {
         from: { row: headerRow, column: 1 },

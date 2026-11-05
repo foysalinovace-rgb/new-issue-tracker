@@ -5,8 +5,8 @@ import './auth.css';
 
 export function LoginPage() {
   const { signIn, error: sessionError } = useAuth();
-  const [email, setEmail] = useState('support@inovacetech.com');
-  const [password, setPassword] = useState('Admin@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
