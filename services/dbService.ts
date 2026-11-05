@@ -604,12 +604,30 @@ export const dbService = {
   async getBranding(): Promise<BrandingConfig> {
     const cached = this.getCachedBranding();
     try {
-      const { data, error } = isLocalMode
-        ? await supabase.from('branding_settings').select('*').eq('id', 'default').maybeSingle()
-        : await supabase.rpc('get_public_branding');
+      let data: any = null;
+      let error: any = null;
 
-      if (error) {
-        console.warn('Could not fetch branding from Supabase, using local settings:', error.message);
+      try {
+        const res = await supabase.from('branding_settings').select('*').eq('id', 'default').maybeSingle();
+        data = res.data;
+        error = res.error;
+      } catch (e: any) {
+        error = e;
+      }
+
+      // If table query returned no data, attempt RPC fallback if available
+      if (!data) {
+        try {
+          const rpcRes = await supabase.rpc('get_public_branding');
+          if (!rpcRes.error && rpcRes.data) {
+            data = rpcRes.data;
+            error = null;
+          }
+        } catch {}
+      }
+
+      if (error && !data) {
+        console.warn('Could not fetch branding from Supabase, using local settings:', error?.message || error);
         return cached;
       }
 
