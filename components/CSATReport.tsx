@@ -663,7 +663,6 @@ export const CSATReport: React.FC = () => {
 
     // Sheet 2: Rating Details
     const ratingHeaders = [
-      'Ticket ID',
       'Client Name',
       'Feedback Rating (1-5)',
       'Customer Satisfaction',
@@ -677,7 +676,6 @@ export const CSATReport: React.FC = () => {
       'Issue Details'
     ];
     const ratingRows = filteredIssues.map(i => [
-      i.clickup_ticket_id || i.id || '',
       i.client_name || '',
       i.feedback_rating || '',
       i.customer_satisfaction || '',
@@ -692,12 +690,12 @@ export const CSATReport: React.FC = () => {
     ]);
     const wsRatingDetails = XLSX.utils.aoa_to_sheet([ratingHeaders, ...ratingRows]);
     wsRatingDetails['!cols'] = [
-      { wch: 18 }, { wch: 28 }, { wch: 22 }, { wch: 22 }, { wch: 20 },
+      { wch: 28 }, { wch: 22 }, { wch: 22 }, { wch: 20 },
       { wch: 20 }, { wch: 18 }, { wch: 20 }, { wch: 16 }, { wch: 16 },
       { wch: 16 }, { wch: 55 }
     ];
     if (ratingRows.length > 0) {
-      wsRatingDetails['!autofilter'] = { ref: `A1:L${ratingRows.length + 1}` };
+      wsRatingDetails['!autofilter'] = { ref: `A1:K${ratingRows.length + 1}` };
     }
     XLSX.utils.book_append_sheet(wb, wsRatingDetails, 'Rating Details');
 
@@ -1130,7 +1128,6 @@ export const CSATReport: React.FC = () => {
             <DataLedger><table className="v2-ledger w-full text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-700">
-                  <th className="py-3 px-3">Ticket ID</th>
                   <th className="py-3 px-4">Client Name</th>
                   <th className="py-3 px-4">Issue Details</th>
                   <th className="py-3 px-3 text-center bg-emerald-50/50 dark:bg-emerald-950/20 font-bold text-emerald-700 dark:text-emerald-300">
@@ -1157,9 +1154,6 @@ export const CSATReport: React.FC = () => {
 
                     return (
                       <tr key={issue.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
-                        <td className="py-3 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-400">
-                          {issue.clickup_ticket_id || issue.id.slice(0, 8)}
-                        </td>
                         <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white">
                           {issue.client_name || 'Unknown'}
                         </td>
@@ -1339,7 +1333,7 @@ export const CSATReport: React.FC = () => {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <h3 className="v2-heading font-bold text-sm text-slate-900 dark:text-white">
-                  Ticket: {viewIssueModal.clickup_ticket_id || viewIssueModal.id}
+                  Client: {viewIssueModal.client_name || 'Details'}
                 </h3>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                   isSolvedOrClosed(viewIssueModal.status)
