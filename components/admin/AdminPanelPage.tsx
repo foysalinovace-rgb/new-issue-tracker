@@ -26,7 +26,8 @@ import {
   RefreshCw,
   ExternalLink,
   Layers,
-  BadgeDollarSign
+  BadgeDollarSign,
+  Lock
 } from 'lucide-react';
 import { 
   adminAuthService, 
@@ -43,6 +44,17 @@ export const AdminPanelPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('workspace_control_unlocked') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   useEffect(() => {
     // Auth Guard: if not logged in, redirect to login page
     if (!adminAuthService.isAdminLoggedIn()) {
@@ -54,11 +66,45 @@ export const AdminPanelPage: React.FC = () => {
     const handleConfigChange = (e: any) => {
       if (e.detail) setConfig(e.detail);
     };
+    const handleUnlockEvent = () => {
+      try {
+        setIsUnlocked(sessionStorage.getItem('workspace_control_unlocked') === 'true');
+      } catch {}
+    };
     window.addEventListener('module-config-changed', handleConfigChange);
+    window.addEventListener('workspace-control-unlocked', handleUnlockEvent);
     return () => {
       window.removeEventListener('module-config-changed', handleConfigChange);
+      window.removeEventListener('workspace-control-unlocked', handleUnlockEvent);
     };
   }, []);
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput.trim() === 'Iamfapolok@1') {
+      try {
+        sessionStorage.setItem('workspace_control_unlocked', 'true');
+      } catch {}
+      setIsUnlocked(true);
+      setPasswordError('');
+      setPasswordInput('');
+      window.dispatchEvent(new CustomEvent('workspace-control-unlocked'));
+      showToast('Workspace control unlocked.');
+    } else {
+      setPasswordError('Incorrect password! Please try again.');
+    }
+  };
+
+  const handleLock = () => {
+    try {
+      sessionStorage.removeItem('workspace_control_unlocked');
+    } catch {}
+    setIsUnlocked(false);
+    setPasswordInput('');
+    setPasswordError('');
+    window.dispatchEvent(new CustomEvent('workspace-control-unlocked'));
+    showToast('Workspace control locked.');
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -124,6 +170,73 @@ export const AdminPanelPage: React.FC = () => {
 
   const categories = ['all', 'Main', 'Retention', 'Issues', 'Monthly', 'Infrastructure', 'Config'];
 
+  if (!isUnlocked) {
+    return (
+      <ModuleWorkspace data-ui="v2" id="AdminPanelPage" number="24" title="Workspace control" description="Organize module availability and manage your operational workspace." category="Administration" kind="settings" links={[]}>
+        <div className="v2-page-content">
+          <div className="max-w-md mx-auto my-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-8 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-4">
+              <Lock size={28} />
+            </div>
+            <h2 className="v2-heading text-lg font-bold text-slate-900 dark:text-white mb-1.5">
+              Workspace Control (Protected)
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+              Please enter the security password to access Workspace Control and module configurations.
+            </p>
+
+            <form onSubmit={handlePasswordSubmit} className="space-y-4 text-left">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Admin Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={passwordInput}
+                    onChange={(e) => {
+                      setPasswordInput(e.target.value);
+                      setPasswordError('');
+                    }}
+                    placeholder="Enter password..."
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500 pr-10"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {passwordError && (
+                  <p className="text-xs text-rose-500 mt-1.5 font-medium">{passwordError}</p>
+                )}
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard')}
+                  className="v2-button flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-colors text-center cursor-pointer"
+                >
+                  Back to Dashboard
+                </button>
+                <button
+                  type="submit"
+                  className="v2-button flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-colors shadow-md shadow-indigo-600/20 text-center cursor-pointer"
+                >
+                  Unlock
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </ModuleWorkspace>
+    );
+  }
+
   return (
     <ModuleWorkspace data-ui="v2" id="AdminPanelPage" number="24" title="Workspace control" description="Organize module availability and manage your operational workspace." category="Administration" kind="settings" links={[]}><div className="v2-page-content">
       {/* Toast Notification */}
@@ -153,17 +266,25 @@ export const AdminPanelPage: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              মডিউল অন/অফ করুন: কোনো মডিউল অফ করলে সব ব্রাউজারে সাইডবার থেকে হাইড হবে এবং সরাসরি URL এক্সেসও ব্লক থাকবে।
+              Toggle modules: When a module is turned off, it is immediately hidden from the sidebar across all sessions and direct URL access is blocked.
             </p>
           </div>
         </div>
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          
+          <button
+            type="button"
+            onClick={handleLock}
+            className="v2-button inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors shadow-xs cursor-pointer"
+            title="Lock Workspace Control"
+          >
+            <Lock size={14} />
+            Lock
+          </button>
           <button
             onClick={handleLogout}
-            className="v2-button inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors shadow-xs"
+            className="v2-button inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors shadow-xs cursor-pointer"
           >
             <LogOut size={14} />
             Logout

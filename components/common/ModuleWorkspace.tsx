@@ -10,9 +10,11 @@ export function ModuleWorkspace({ id, title, description, kind, children }: Prop
   if (embedded) return <div className={`v2-embedded v2-${id}`}>{children}</div>;
   return <WorkspaceContext.Provider value={true}>
     <div className={`module-workspace workbench-${kind} v2-${id}`} data-module={id}>
-      <header className="module-page-heading overview-heading">
-        <div><h1>{title}<span className="module-title-dot">.</span></h1><p>{description}</p></div>
-      </header>
+      {(title || description) ? (
+        <header className="module-page-heading overview-heading">
+          <div>{title && <h1>{title}<span className="module-title-dot">.</span></h1>}{description && <p>{description}</p>}</div>
+        </header>
+      ) : null}
       <div className="workbench-stage">{children}</div>
     </div>
   </WorkspaceContext.Provider>;

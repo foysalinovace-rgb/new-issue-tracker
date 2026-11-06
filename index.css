@@ -67,6 +67,10 @@ button:disabled { cursor: not-allowed; }
 .local-pill { display: inline-flex; gap: 6px; align-items: center; padding: 5px 8px; background: #f0f8f4; color: #428b6d; border-radius: 5px; font-size: 9px; white-space: nowrap; }
 .dark .local-pill { background: #1b332b; color: #80c7a6; }
 .admin-button { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 500; border-left: 1px solid var(--line); padding-left: 14px; }
+.sticky-action-header { position: sticky; right: 0; z-index: 10; background-color: #e0f2fe !important; box-shadow: -3px 0 6px -2px rgba(0, 0, 0, 0.05); }
+.dark .sticky-action-header { background-color: #0c4a6e !important; }
+.sticky-action-cell { position: sticky; right: 0; z-index: 10; background-color: var(--surface); box-shadow: -3px 0 6px -2px rgba(0, 0, 0, 0.05); transition: background-color .15s ease; }
+tr:hover .sticky-action-cell, .group:hover .sticky-action-cell, .v2-ledger tbody tr:hover td.sticky-action-cell { background-color: var(--soft) !important; }
 .page-content { padding: 28px 30px; flex: 1; min-width: 0; animation: page-enter .25s ease both; }
 .app-footer { display: flex; justify-content: space-between; gap: 10px; padding: 16px 30px; font-size: 9px; color: var(--muted); border-top: 1px solid var(--line); }
 .app-footer > span:last-child { display: flex; align-items: center; gap: 6px; }

@@ -1141,7 +1141,7 @@ export const CSATReport: React.FC = () => {
                   <th className="py-3 px-3 text-center">Solution Status</th>
                   <th className="py-3 px-3 text-center">Resolved Confirmed</th>
                   <th className="py-3 px-3">Feedback Date</th>
-                  <th className="py-3 px-3 text-right">View</th>
+                  <th className="py-3 px-3 text-right sticky-action-header">View</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1153,7 +1153,7 @@ export const CSATReport: React.FC = () => {
                     const res = issue.issue_resolved_confirmed?.trim();
 
                     return (
-                      <tr key={issue.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+                      <tr key={issue.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition group">
                         <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white">
                           {issue.client_name || 'Unknown'}
                         </td>
@@ -1273,7 +1273,7 @@ export const CSATReport: React.FC = () => {
                         </td>
 
                         {/* Action View */}
-                        <td className="py-3 px-3 text-right">
+                        <td className="py-3 px-3 text-right sticky-action-cell">
                           <button
                             onClick={() => setViewIssueModal(issue)}
                             className="v2-button p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition"

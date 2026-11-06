@@ -2,6 +2,7 @@ import { DrawerPortal } from './common/DrawerPortal';
 import { ModuleWorkspace } from './common/ModuleWorkspace';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { dbService, DEFAULT_BRANDING, applyFaviconAndTitle } from '../services/dbService';
 import { SettingItem, BrandingConfig } from '../types';
 import { 
@@ -16,10 +17,16 @@ import {
   Palette, 
   CheckCircle2, 
   RefreshCw,
-  Globe
+  Globe,
+  Sliders,
+  Lock,
+  ArrowRight,
+  ShieldCheck,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
-type TabType = 'branding' | SettingItem['category'];
+type TabType = 'branding' | SettingItem['category'] | 'workspace_control';
 
 const CATEGORIES: { id: TabType; label: string }[] = [
   { id: 'branding', label: 'Branding & Logo' },
@@ -29,15 +36,30 @@ const CATEGORIES: { id: TabType; label: string }[] = [
   { id: 'status', label: 'Statuses' },
   { id: 'assigned_person', label: 'Assigned Persons' },
   { id: 'system_name', label: 'Systems' },
+  { id: 'workspace_control', label: 'Workspace Control' },
 ];
 
 const Settings: React.FC = () => {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<SettingItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<TabType>('branding');
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<{show: boolean, id: string | null}>({ show: false, id: null });
+
+  // Workspace Control Unlock State
+  const [isWorkspaceUnlocked, setIsWorkspaceUnlocked] = useState(() => {
+    try {
+      return sessionStorage.getItem('workspace_control_unlocked') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Branding State
   const [brandingForm, setBrandingForm] = useState<BrandingConfig>(() => dbService.getCachedBranding());
@@ -50,7 +72,46 @@ const Settings: React.FC = () => {
   useEffect(() => {
     loadSettings();
     loadBranding();
+    const handleUnlockEvent = () => {
+      try {
+        setIsWorkspaceUnlocked(sessionStorage.getItem('workspace_control_unlocked') === 'true');
+      } catch {}
+    };
+    window.addEventListener('workspace-control-unlocked', handleUnlockEvent);
+    return () => window.removeEventListener('workspace-control-unlocked', handleUnlockEvent);
   }, []);
+
+  const handleOpenWorkspaceControl = () => {
+    let unlocked = false;
+    try {
+      unlocked = sessionStorage.getItem('workspace_control_unlocked') === 'true';
+    } catch {}
+
+    if (unlocked) {
+      navigate('/admin');
+    } else {
+      setPasswordInput('');
+      setPasswordError('');
+      setShowPasswordModal(true);
+    }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput.trim() === 'Iamfapolok@1') {
+      try {
+        sessionStorage.setItem('workspace_control_unlocked', 'true');
+      } catch {}
+      setIsWorkspaceUnlocked(true);
+      setShowPasswordModal(false);
+      setPasswordInput('');
+      setPasswordError('');
+      window.dispatchEvent(new CustomEvent('workspace-control-unlocked'));
+      navigate('/admin');
+    } else {
+      setPasswordError('Incorrect password! Please try again.');
+    }
+  };
 
   const loadSettings = async () => {
     const data = await dbService.getSettings();
@@ -64,7 +125,7 @@ const Settings: React.FC = () => {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim() || activeCategory === 'branding') return;
+    if (!newName.trim() || activeCategory === 'branding' || activeCategory === 'workspace_control') return;
     await dbService.saveSetting({ category: activeCategory as SettingItem['category'], name: newName.trim() });
     setNewName('');
     loadSettings();
@@ -234,8 +295,16 @@ const Settings: React.FC = () => {
               >
                 <span className="flex items-center gap-2">
                   {cat.id === 'branding' && <Palette size={15} className="text-indigo-500" />}
+                  {cat.id === 'workspace_control' && <Sliders size={15} className="text-indigo-500" />}
                   {cat.label}
                 </span>
+                {cat.id === 'workspace_control' && (
+                  !isWorkspaceUnlocked ? (
+                    <Lock size={12} className="text-amber-500 opacity-75 shrink-0" />
+                  ) : (
+                    <ShieldCheck size={13} className="text-emerald-500 shrink-0" />
+                  )
+                )}
               </button>
             ))}
           </div>
@@ -480,7 +549,7 @@ const Settings: React.FC = () => {
                   </div>
                 </form>
               </div>
-            ) : (
+            ) : activeCategory !== 'workspace_control' ? (
               /* Option Categories (Existing Settings) */
               <div className="space-y-6">
                 <form onSubmit={handleAdd} className="v2-form flex gap-3">
@@ -581,10 +650,155 @@ const Settings: React.FC = () => {
                   </table>
                 </div>
               </div>
+            ) : (
+              /* Workspace Control Category Panel */
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/50 shrink-0">
+                        <Sliders size={24} />
+                      </div>
+                      <div>
+                        <h3 className="v2-heading text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>Workspace Control</span>
+                          {!isWorkspaceUnlocked ? (
+                            <span className="text-[10px] px-2 py-0.5 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full font-bold flex items-center gap-1">
+                              <Lock size={10} /> Locked
+                            </span>
+                          ) : (
+                            <span className="text-[10px] px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-full font-bold flex items-center gap-1">
+                              <ShieldCheck size={11} /> Unlocked
+                            </span>
+                          )}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Configure module visibility, permissions, and system controls.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleOpenWorkspaceControl}
+                      className="v2-button px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer self-start sm:self-auto shrink-0"
+                    >
+                      <span>Open Workspace Control</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+
+                  <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                      <span className="text-slate-400 block text-[11px] font-semibold mb-1">Access Security</span>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">
+                        Password protected admin module
+                      </p>
+                    </div>
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                      <span className="text-slate-400 block text-[11px] font-semibold mb-1">Module Controls</span>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">
+                        Toggle system modules on/off
+                      </p>
+                    </div>
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                      <span className="text-slate-400 block text-[11px] font-semibold mb-1">Real-time Sync</span>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">
+                        Synced across all devices and browsers
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Workspace Control Password Modal */}
+      {showPasswordModal && (
+        <DrawerPortal>
+          <div className="v2-overlay fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="v2-surface bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+              <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/40">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200 dark:border-amber-900/50">
+                    <Lock size={18} />
+                  </div>
+                  <div>
+                    <h3 className="v2-heading text-sm font-bold text-slate-900 dark:text-white">
+                      Workspace Control Password
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Administrator verification required
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="v2-button p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handlePasswordSubmit}>
+                <div className="p-6 space-y-4">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Enter administrator password to access <strong>Workspace Control</strong>:
+                  </p>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={passwordInput}
+                        onChange={(e) => {
+                          setPasswordInput(e.target.value);
+                          setPasswordError('');
+                        }}
+                        placeholder="Enter password..."
+                        className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500 pr-10"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(v => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {passwordError && (
+                      <p className="text-xs text-rose-500 mt-1.5 font-medium">{passwordError}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordModal(false)}
+                    className="v2-button px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="v2-button px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-colors shadow-md shadow-indigo-600/20 cursor-pointer"
+                  >
+                    Unlock
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </DrawerPortal>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm.show && (

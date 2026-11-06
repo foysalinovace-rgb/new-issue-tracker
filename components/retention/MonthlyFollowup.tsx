@@ -216,7 +216,7 @@ export const MonthlyFollowup: React.FC = () => {
                 <th className="py-3 px-3">Status</th>
                 <th className="py-3 px-4">Discussion Summary & Notes</th>
                 <th className="py-3 px-3">Next Action</th>
-                <th className="py-3 px-4 text-right">Quick Status</th>
+                <th className="py-3 px-4 text-right sticky-action-header">Quick Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -230,7 +230,7 @@ export const MonthlyFollowup: React.FC = () => {
                 filteredCalls.map((call) => {
                   const linkedCust = customers.find(c => c.id === call.customer_id);
                   return (
-                    <tr key={call.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                    <tr key={call.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group">
                       <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
                         {call.call_date}
                       </td>
@@ -270,7 +270,7 @@ export const MonthlyFollowup: React.FC = () => {
                       <td className="py-3 px-3 text-indigo-600 dark:text-indigo-400 whitespace-nowrap font-medium">
                         {call.next_followup_date || '—'}
                       </td>
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-3 px-4 text-right sticky-action-cell">
                         <select
                           value={call.status}
                           onChange={(e) => {

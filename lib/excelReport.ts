@@ -3,12 +3,14 @@ import type { WorkBook } from 'xlsx';
 import type { Cell, Fill, Workbook } from 'exceljs';
 
 const colors = {
-  navy: 'FF1E293B',    // Slate 800 - professional dark header
-  teal: 'FF0F766E',    // Deep Teal 700 - brand primary
+  navy: 'FF1E293B',    // Slate 800
+  teal: 'FF0F766E',    // Deep Teal
+  headerSky: 'FF38BDF8', // Sky 400 - Vibrant clean skyblue for Excel headers
+  headerDarkText: 'FF0F172A', // Slate 900 - High contrast text on skyblue
   ink: 'FF1E293B',     // Text color
   muted: 'FF64748B',   // Muted subtitle
-  line: 'FFE2E8F0',    // Light slate border
-  stripe: 'FFF8FAFC',  // Subtle alternate row zebra
+  line: 'FFCBD5E1',    // Slate 300 crisp border
+  stripe: 'FFF0F9FF',  // Light skyblue tint alternating zebra stripe
   white: 'FFFFFFFF',
   // Status pill colors
   successBg: 'FFDCFCE7', successText: 'FF166534',
@@ -132,25 +134,25 @@ export async function createStyledReport(source: WorkBook, options: { template?:
         const text = displayText(cell);
         if (!text) return;
 
-        // Split multi-line cells and measure max line width
+        // Split multi-line cells and measure max line width with generous padding
         const lines = text.split('\n');
         for (const line of lines) {
-          const w = Math.ceil(estimateTextWidth(line) + 4);
+          const w = Math.ceil(estimateTextWidth(line) + 6);
           if (w > maxCharWidth) maxCharWidth = w;
         }
       });
 
-      // Practical category minimums so numbers, dates and names have breathing space
-      let minW = 14;
-      if (/^sl\b|^#\b|^id\b/i.test(heading)) minW = 10;
-      else if (/date|time/i.test(heading)) minW = 16;
-      else if (/client|company|customer/i.test(heading)) minW = 30;
-      else if (/assigned|person|handler|rep|sold by|called by/i.test(heading)) minW = 24;
-      else if (/satisfaction|rating|resolved/i.test(heading)) minW = 20;
-      else if (/fee|price|revenue|amount|value|mrr|discount/i.test(heading)) minW = 18;
-      else if (/status|priority|category|segment|type/i.test(heading)) minW = 18;
+      // Practical category minimums so numbers, dates and names have ample breathing space
+      let minW = 16;
+      if (/^sl\b|^#\b|^id\b/i.test(heading)) minW = 14;
+      else if (/date|time/i.test(heading)) minW = 20;
+      else if (/client|company|customer/i.test(heading)) minW = 32;
+      else if (/assigned|person|handler|rep|sold by|called by/i.test(heading)) minW = 26;
+      else if (/satisfaction|rating|resolved/i.test(heading)) minW = 22;
+      else if (/fee|price|revenue|amount|value|mrr|discount/i.test(heading)) minW = 20;
+      else if (/status|priority|category|segment|type/i.test(heading)) minW = 20;
 
-      colMaxWidths[col - 1] = Math.max(minW, Math.min(65, maxCharWidth));
+      colMaxWidths[col - 1] = Math.max(minW, Math.min(75, maxCharWidth));
     }
 
     // Apply auto-fitted column widths
@@ -184,12 +186,12 @@ export async function createStyledReport(source: WorkBook, options: { template?:
         const isCenterCol = /^sl\b|^#\b|status|priority|rating|resolved/i.test(heading);
 
         // Crisp, visible Slate 300 border so every row line is clearly demarcated
-        const edge = { style: 'thin' as const, color: { argb: 'FFCBD5E1' } };
+        const edge = { style: 'thin' as const, color: { argb: colors.line } };
         cell.border = { top: edge, bottom: edge, left: edge, right: edge };
 
         if (isHeader) {
-          cell.fill = fill(colors.teal);
-          cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: colors.white } };
+          cell.fill = fill(colors.headerSky);
+          cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: colors.headerDarkText } };
           cell.alignment = {
             vertical: 'middle',
             horizontal: isNumeric ? 'right' : isCenterCol ? 'center' : 'left',
@@ -230,7 +232,7 @@ export async function createStyledReport(source: WorkBook, options: { template?:
           const shouldWrap = isNarrative || text.includes('\n');
 
           cell.alignment = {
-            vertical: shouldWrap ? 'top' : 'middle',
+            vertical: 'middle',
             horizontal: isNumeric ? 'right' : isCenterCol ? 'center' : 'left',
             wrapText: shouldWrap,
           };

@@ -122,12 +122,12 @@ const MonthlyReports: React.FC = () => {
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Device</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Awareness</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Help</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Action</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right sticky-action-header">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {entries.map((e, idx) => (
-                    <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                    <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
                       <td className="px-6 py-4 font-semibold text-sm text-slate-900 dark:text-white">
                         {new Date(e.month + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}
                       </td>
@@ -141,7 +141,7 @@ const MonthlyReports: React.FC = () => {
                       <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{e.device_issues}</td>
                       <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{e.awareness}</td>
                       <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{e.help_requests}</td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right sticky-action-cell">
                         <button 
                           onClick={() => handleDelete(e.id)}
                           className="v2-button text-slate-400 hover:text-rose-500 transition-colors p-2 cursor-pointer"

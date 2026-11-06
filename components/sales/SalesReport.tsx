@@ -453,7 +453,7 @@ export const SalesReport: React.FC = () => {
                 <th className="py-3 px-3 font-mono">Total Value</th>
                 <th className="py-3 px-3">Sold By</th>
                 <th className="py-3 px-3">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4 text-right sticky-action-header">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -553,7 +553,7 @@ export const SalesReport: React.FC = () => {
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right sticky-action-cell">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           type="button"

@@ -35,12 +35,10 @@
 .module-workspace .module-tabs a { color: var(--wb-muted); font-size: 10px; }
 .module-workspace .module-tabs a.active { color: var(--wb-accent); border-color: var(--wb-accent); }
 
-/* Ledgers become one working sheet with a colored header and divided rows. */
-.module-workspace .v2-ledger-scroll { border-radius: 0; scrollbar-width: thin; }
-.module-workspace table.v2-ledger { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--wb-surface); font-size: 11px; }
-.module-workspace .v2-ledger thead, .module-workspace .v2-ledger thead tr { background: #f7f9fa; }
-.dark .module-workspace .v2-ledger thead, .dark .module-workspace .v2-ledger thead tr { background: #293650; }
-.module-workspace .v2-ledger th { font-size: 9px; font-weight: 600; color: #687b9b; text-transform: none; letter-spacing: .1px; padding: 15px 14px; border-top: 1px solid var(--wb-border); border-bottom: 1px solid var(--wb-border); white-space: nowrap; }
+.module-workspace .v2-ledger thead, .module-workspace .v2-ledger thead tr { background: #e0f2fe; }
+.dark .module-workspace .v2-ledger thead, .dark .module-workspace .v2-ledger thead tr { background: #0c4a6e; }
+.module-workspace .v2-ledger th { font-size: 9px; font-weight: 700; color: #0369a1; text-transform: none; letter-spacing: .1px; padding: 15px 14px; border-top: 1px solid #bae6fd; border-bottom: 1px solid #bae6fd; white-space: nowrap; }
+.dark .module-workspace .v2-ledger th { color: #bae6fd; border-top-color: #075985; border-bottom-color: #075985; }
 .module-workspace .v2-ledger td { border-bottom: 1px solid var(--wb-border); padding: 16px 14px; color: var(--wb-ink); font-size: 11px; line-height: 1.6; }
 .module-workspace .v2-ledger tbody tr:nth-child(even) { background: var(--wb-field); }
 .module-workspace .v2-ledger tbody tr:hover { background: var(--wb-accent-soft); }
@@ -338,9 +336,10 @@
 .workbench-insights .v2-page-content > .v2-surface { border: 1px solid var(--line); }
 .workbench-ledger .workbench-stage > .v2-page-content > .v2-surface:not(:has(table)) { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 .module-workspace .filter-desk { border-radius: 10px; background: var(--surface); border-color: var(--line); }
-.module-workspace .filter-desk-toggle { background: var(--surface); color: var(--accent); }
-.module-workspace .v2-ledger thead, .module-workspace .v2-ledger thead tr { background: var(--soft); }
-.module-workspace .v2-ledger th { color: var(--muted); }
+.module-workspace .v2-ledger thead, .module-workspace .v2-ledger thead tr { background: #e0f2fe; }
+.dark .module-workspace .v2-ledger thead, .dark .module-workspace .v2-ledger thead tr { background: #0c4a6e; }
+.module-workspace .v2-ledger th { color: #0369a1; }
+.dark .module-workspace .v2-ledger th { color: #bae6fd; }
 .module-workspace .v2-ledger tbody tr:nth-child(even) { background: var(--surface); }
 .module-workspace .v2-ledger tbody tr:hover { background: var(--soft); }
 .module-workspace .module-header { background: transparent; }

@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { dbService } from '../services/dbService';
 import { Issue, SettingItem } from '../types';
 import { PRIORITY_COLORS, STATUS_COLORS } from '../constants';
-import { Search, Filter, Download, Trash2, Edit2, X, ChevronLeft, ChevronRight, Upload, FileSpreadsheet, CheckSquare, Square, Smile, Link2, Copy, Check, ExternalLink, Share2 } from 'lucide-react';
+import { Search, Filter, Download, Trash2, Edit2, X, ChevronLeft, ChevronRight, Upload, FileSpreadsheet, CheckSquare, Square, Smile, Link2, Copy, Check, ExternalLink, Share2, Eye, Clock, CheckCircle2, User, Calendar, Tag, MessageSquare } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 // Extract YYYY-MM-DD from any date string or Date object
@@ -76,6 +76,20 @@ const isSystemBug = (type?: string): boolean => {
   return type.toLowerCase().includes('bug');
 };
 
+const getPriorityBadgeClass = (priority?: string): string => {
+  const p = String(priority || '').trim().toLowerCase();
+  if (p === 'high' || p === 'urgent') {
+    return 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border-red-300 dark:border-red-800 font-black';
+  }
+  if (p === 'medium') {
+    return 'bg-amber-200 text-amber-950 dark:bg-amber-500/20 dark:text-amber-300 border-amber-400 dark:border-amber-500/50 font-black';
+  }
+  if (p === 'low') {
+    return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 font-black';
+  }
+  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700 font-bold';
+};
+
 const IssueReports: React.FC = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [search, setSearch] = useState('');
@@ -86,6 +100,7 @@ const IssueReports: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [editingIssue, setEditingIssue] = useState<Issue | null>(null);
+  const [viewingIssue, setViewingIssue] = useState<Issue | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -801,19 +816,26 @@ const IssueReports: React.FC = () => {
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Satisfaction</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Feedback Date</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Called By</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right whitespace-nowrap">Actions</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right whitespace-nowrap sticky-action-header">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {currentIssues.length > 0 ? currentIssues.map(issue => (
-                <tr key={issue.id} className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors ${selectedIds.includes(issue.id) ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
+                <tr key={issue.id} className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors ${selectedIds.includes(issue.id) ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
                   <td className="px-4 py-2.5">
                     <button onClick={() => toggleSelect(issue.id)} className={"v2-button " + (selectedIds.includes(issue.id) ? 'text-indigo-600' : 'text-slate-300')}>
                       {selectedIds.includes(issue.id) ? <CheckSquare size={16} /> : <Square size={16} />}
                     </button>
                   </td>
                   <td className="px-4 py-2.5">
-                    <div className="font-semibold text-slate-900 dark:text-white text-xs">{issue.client_name}</div>
+                    <button 
+                      type="button"
+                      onClick={() => setViewingIssue(issue)}
+                      className="v2-button text-left font-semibold text-slate-900 dark:text-white text-xs hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline cursor-pointer transition-colors block"
+                      title="Click to view issue details"
+                    >
+                      {issue.client_name}
+                    </button>
                     <div className="text-[10px] text-slate-400 truncate max-w-[180px]">{issue.issue_details}</div>
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap">
@@ -831,8 +853,8 @@ const IssueReports: React.FC = () => {
                     {issue.category}
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap">
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase border inline-block whitespace-nowrap ${(PRIORITY_COLORS as any)[issue.priority] || 'bg-slate-100'}`}>
-                      {issue.priority}
+                    <span className={`text-[9px] px-2 py-0.5 rounded-full uppercase border inline-block whitespace-nowrap ${getPriorityBadgeClass(issue.priority)}`}>
+                      {issue.priority || '-'}
                     </span>
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap">
@@ -907,31 +929,34 @@ const IssueReports: React.FC = () => {
                       <span className="text-slate-400 text-xs">-</span>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-right flex-nowrap">
+                  <td className="px-4 py-2.5 text-right flex-nowrap sticky-action-cell">
                     <div className="flex items-center justify-end gap-1.5">
                       <button 
+                        type="button"
+                        onClick={() => setViewingIssue(issue)}
+                        className="v2-button p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-all cursor-pointer"
+                        title="View Issue Details"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <button 
+                        type="button"
                         onClick={() => {
                           setFeedbackModalIssue(issue);
                           setCopiedFeedbackLink(false);
                         }}
-                        className="v2-button p-1 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-all"
-                        title="গ্রাহকের ফিডব্যাক লিংক তৈরি করুন (Generate Feedback Link)"
+                        className="v2-button p-1 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-all cursor-pointer"
+                        title="Generate Customer Feedback Link"
                       >
                         <Link2 size={14} />
                       </button>
                       <button 
+                        type="button"
                         onClick={() => setEditingIssue(issue)}
-                        className="v2-button p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-all"
+                        className="v2-button p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-all cursor-pointer"
                         title="Edit Issue"
                       >
                         <Edit2 size={14} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(issue.id)}
-                        className="v2-button p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition-all"
-                        title="Delete Issue"
-                      >
-                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -1427,13 +1452,14 @@ const IssueReports: React.FC = () => {
                   <Link2 size={16} />
                 </div>
                 <div>
-                  <h3 className="v2-heading font-bold text-sm text-slate-900 dark:text-white">গ্রাহক ফিডব্যাক লিংক (Customer Feedback Link)</h3>
-                  <p className="text-[11px] text-slate-500">ক্লায়েন্টের থেকে সরাসরি মতামত গ্রহণের ডায়নামিক লিংক</p>
+                  <h3 className="v2-heading font-bold text-sm text-slate-900 dark:text-white">Customer Feedback Link</h3>
+                  <p className="text-[11px] text-slate-500">Direct link to collect customer satisfaction & feedback</p>
                 </div>
               </div>
               <button 
                 onClick={() => setFeedbackModalIssue(null)}
-                className="v2-button p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="v2-button p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                title="Close"
               >
                 <X size={16} />
               </button>
@@ -1449,11 +1475,11 @@ const IssueReports: React.FC = () => {
                   </span>
                   {feedbackModalIssue.customer_satisfaction || feedbackModalIssue.issue_resolved_confirmed ? (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                      মতামত জমা হয়েছে
+                      Feedback Received
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                      মতামতের অপেক্ষায়
+                      Awaiting Feedback
                     </span>
                   )}
                 </div>
@@ -1464,11 +1490,11 @@ const IssueReports: React.FC = () => {
                 )}
                 {(feedbackModalIssue.customer_satisfaction || feedbackModalIssue.feedback_rating) && (
                   <div className="pt-1.5 border-t border-indigo-100 dark:border-indigo-900/40 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                    <span>সমাধান: <strong className="text-emerald-600">{feedbackModalIssue.issue_resolved_confirmed || 'Yes'}</strong></span>
-                    {feedbackModalIssue.feedback_rating && <span>রেটিং: <strong className="text-amber-500 font-bold">{feedbackModalIssue.feedback_rating}★</strong></span>}
-                    <span>সন্তুষ্টি: <strong className="text-indigo-600">{feedbackModalIssue.customer_satisfaction || '-'}</strong></span>
-                    <span>তারিখ: <strong>{feedbackModalIssue.feedback_date || '-'}</strong></span>
-                    {feedbackModalIssue.called_by && <span>কল করেছেন: <strong className="text-slate-900 dark:text-white">{feedbackModalIssue.called_by}</strong></span>}
+                    <span>Resolved: <strong className="text-emerald-600">{feedbackModalIssue.issue_resolved_confirmed || 'Yes'}</strong></span>
+                    {feedbackModalIssue.feedback_rating && <span>Rating: <strong className="text-amber-500 font-bold">{feedbackModalIssue.feedback_rating}★</strong></span>}
+                    <span>Satisfaction: <strong className="text-indigo-600">{feedbackModalIssue.customer_satisfaction || '-'}</strong></span>
+                    <span>Date: <strong>{feedbackModalIssue.feedback_date || '-'}</strong></span>
+                    {feedbackModalIssue.called_by && <span>Called By: <strong className="text-slate-900 dark:text-white">{feedbackModalIssue.called_by}</strong></span>}
                   </div>
                 )}
               </div>
@@ -1476,7 +1502,7 @@ const IssueReports: React.FC = () => {
               {/* Link Box */}
               <div className="space-y-1.5">
                 <label className="v2-label text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                  জেনারেটকৃত ফিডব্যাক লিংক:
+                  Direct Feedback Link:
                 </label>
                 <div className="flex items-center gap-2">
                   <input 
@@ -1494,7 +1520,7 @@ const IssueReports: React.FC = () => {
                     }`)}
                   >
                     {copiedFeedbackLink ? <Check size={14} /> : <Copy size={14} />}
-                    <span>{copiedFeedbackLink ? 'কপি হয়েছে!' : 'কপি লিংক'}</span>
+                    <span>{copiedFeedbackLink ? 'Copied!' : 'Copy Link'}</span>
                   </button>
                 </div>
               </div>
@@ -1506,42 +1532,268 @@ const IssueReports: React.FC = () => {
                   href={getFeedbackLink(feedbackModalIssue.id)}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ExternalLink size={13} />
-                  <span>লিংক ওপেন করুন</span>
+                  <span>Open Link</span>
                 </a>
 
                 {/* Share via WhatsApp */}
                 <button
                   onClick={() => {
                     const url = getFeedbackLink(feedbackModalIssue.id);
-                    const text = `প্রিয় ${feedbackModalIssue.client_name},\nটিপসই থেকে নেওয়া সাপোর্ট সেবার সমাধান ও সন্তুষ্টির মতামত জানাতে অনুগ্রহ করে নিচের লিংকে প্রবেশ করুন:\n${url}\nধন্যবাদ!`;
+                    const text = `Dear ${feedbackModalIssue.client_name},\nPlease click the link below to share your feedback regarding our support service resolution:\n${url}\nThank you!`;
                     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
                   }}
-                  className="v2-button px-3 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                  className="v2-button px-3 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Share2 size={13} />
-                  <span>WhatsApp এ পাঠান</span>
+                  <span>Send via WhatsApp</span>
                 </button>
               </div>
 
               <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-normal">
-                * ক্লায়েন্ট এই লিংকে প্রবেশ করে ৩টি প্রশ্নের (ইস্যু সমাধান হয়েছে কিনা, সন্তুষ্টির মাত্রা এবং তারিখ) উত্তর সাবমিট করলে তা সরাসরি এই রিপোর্টে সংরক্ষিত হবে। ইতিমধ্যে সাবমিট করা থাকলে পুনরায় সাবমিট করতে পারবে না।
+                * Clients can open this link to submit feedback on issue resolution, satisfaction rating, and date. Feedback will be automatically recorded in this report.
               </p>
             </div>
 
             {/* Modal Footer */}
             <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-end">
               <button
+                type="button"
                 onClick={() => setFeedbackModalIssue(null)}
-                className="v2-button px-4 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-lg transition-colors"
+                className="v2-button px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 border border-slate-700 dark:border-slate-600 text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-sm"
               >
-                বন্ধ করুন (Close)
+                Close
               </button>
             </div>
           </div>
         </div></DrawerPortal>
+      )}
+
+      {/* Issue Details View Modal */}
+      {viewingIssue && (
+        <DrawerPortal>
+          <div className="v2-overlay fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="v2-surface bg-white dark:bg-slate-900 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/40">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/50">
+                    <Eye size={18} />
+                  </div>
+                  <div>
+                    <h3 className="v2-heading text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>Issue Details</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Client: <span className="font-semibold text-slate-800 dark:text-slate-200">{viewingIssue.client_name}</span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewingIssue(null)}
+                  className="v2-button p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-5 overflow-y-auto">
+                {/* Badges Bar */}
+                <div className="flex flex-wrap items-center gap-2 pb-1 border-b border-slate-100 dark:border-slate-800">
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${STATUS_COLORS[viewingIssue.status] || 'bg-slate-100 text-slate-700'}`}>
+                    {viewingIssue.status}
+                  </span>
+                  <span className={`text-xs px-2.5 py-1 rounded-full uppercase border inline-block whitespace-nowrap ${getPriorityBadgeClass(viewingIssue.priority)}`}>
+                    {viewingIssue.priority || '-'}
+                  </span>
+                  <span className="text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full font-medium">
+                    Type: {viewingIssue.issue_type}
+                  </span>
+                  {viewingIssue.category && (
+                    <span className="text-xs px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded-full font-medium">
+                      Category: {viewingIssue.category}
+                    </span>
+                  )}
+                  {viewingIssue.segment && (
+                    <span className="text-xs px-2.5 py-1 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 rounded-full font-medium">
+                      Segment: {viewingIssue.segment}
+                    </span>
+                  )}
+                </div>
+
+                {/* Issue Details Box */}
+                <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    <MessageSquare size={13} className="text-indigo-500" />
+                    <span>Issue Description</span>
+                  </div>
+                  <div className="text-sm text-slate-800 dark:text-slate-100 whitespace-pre-wrap leading-relaxed">
+                    {viewingIssue.issue_details || 'No description provided.'}
+                  </div>
+                </div>
+
+                {/* Key Attributes Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="bg-white dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <User size={13} className="text-slate-400" />
+                      Assigned Handler:
+                    </span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                      {viewingIssue.assigned_person || '-'}
+                    </span>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <Tag size={13} className="text-slate-400" />
+                      ClickUp Ticket ID:
+                    </span>
+                    <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                      {viewingIssue.clickup_ticket_id || '-'}
+                    </span>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <User size={13} className="text-slate-400" />
+                      Called By:
+                    </span>
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      {viewingIssue.called_by || '-'}
+                    </span>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <CheckCircle2 size={13} className="text-slate-400" />
+                      Resolved Confirmed:
+                    </span>
+                    <span className={`text-xs font-bold ${
+                      viewingIssue.issue_resolved_confirmed === 'Yes' 
+                        ? 'text-emerald-600 dark:text-emerald-400' 
+                        : viewingIssue.issue_resolved_confirmed === 'No'
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : 'text-slate-500'
+                    }`}>
+                      {viewingIssue.issue_resolved_confirmed || 'Pending'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Timeline Grid */}
+                <div className="bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-800 rounded-xl p-4">
+                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <Clock size={13} className="text-indigo-500" />
+                    <span>Timing & Resolution Tracking</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Issue Date & Time</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {formatIssueDateTime(viewingIssue.issue_date, viewingIssue.created_at)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Client Reporting Time</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {viewingIssue.client_reporting_time || '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Response Time</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {viewingIssue.response_time || '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Resolution Date</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {viewingIssue.resolution_date || '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Resolution Time</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {viewingIssue.resolution_time || '-'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Customer Feedback Card */}
+                <div className="bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
+                      <Smile size={14} className="text-indigo-500" />
+                      Customer Feedback
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = viewingIssue;
+                        setViewingIssue(null);
+                        setFeedbackModalIssue(target);
+                        setCopiedFeedbackLink(false);
+                      }}
+                      className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Link2 size={12} />
+                      <span>Share Feedback Link</span>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Rating (1-5)</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                        {viewingIssue.feedback_rating ? `${viewingIssue.feedback_rating} ★` : 'Not submitted'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Satisfaction</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {viewingIssue.customer_satisfaction || '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Feedback Date</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {viewingIssue.feedback_date || '-'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = viewingIssue;
+                    setViewingIssue(null);
+                    setEditingIssue(target);
+                  }}
+                  className="v2-button px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Edit2 size={13} />
+                  <span>Edit Issue</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingIssue(null)}
+                  className="v2-button px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 border border-slate-700 dark:border-slate-600 text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </DrawerPortal>
       )}
     </div></ModuleWorkspace>
   );

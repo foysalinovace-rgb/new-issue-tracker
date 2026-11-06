@@ -211,7 +211,7 @@ export const RetentionCustomers: React.FC = () => {
                 <th className="py-3 px-3">Health Status</th>
                 <th className="py-3 px-3">Assigned Specialist</th>
                 <th className="py-3 px-3">Last Contact</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4 text-right sticky-action-header">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -258,7 +258,7 @@ export const RetentionCustomers: React.FC = () => {
                     <tr
                       key={cust.id}
                       onClick={() => setProfileCustomer(cust)}
-                      className={`${rowBorderClass} hover:bg-slate-50/80 dark:hover:bg-slate-800/50 cursor-pointer transition-colors`}
+                      className={`${rowBorderClass} hover:bg-slate-50/80 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group`}
                     >
                       {/* Company Name & ID */}
                       <td className="py-3 px-4">
@@ -330,7 +330,7 @@ export const RetentionCustomers: React.FC = () => {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-3 px-4 text-right sticky-action-cell">
                         <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={(e) => handleOpenCall(cust, e)}

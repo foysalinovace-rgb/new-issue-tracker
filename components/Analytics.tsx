@@ -454,7 +454,7 @@ const Analytics: React.FC = () => {
 
   // Monthly Trend Chart
   return (
-    <ModuleWorkspace data-ui="v2" id="Analytics" number="04" title="Issue intelligence" description="Explore patterns, repeat reports and your team’s operational performance." category="Support intelligence" kind="insights" links={[{"label":"Weekly brief","path":"/weekly-report"}]}><div className="v2-page-content">
+    <ModuleWorkspace data-ui="v2" id="Analytics" number="04" title="" description="" category="Support intelligence" kind="insights" links={[{"label":"Weekly brief","path":"/weekly-report"}]}><div className="v2-page-content">
       {/* Header & Filters */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
