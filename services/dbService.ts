@@ -70,10 +70,11 @@ export function parseIssueVirtualFields(issue: any): any {
   let customer_satisfaction = issue.customer_satisfaction || '';
   let feedback_date = issue.feedback_date || '';
   let feedback_rating = issue.feedback_rating || '';
+  let want_to_refer = issue.want_to_refer || '';
   let called_by = issue.called_by || '';
 
   // Fallback to metadata tag format if the actual columns are empty
-  if (!response_time || !resolution_time || !resolution_date || !client_reporting_time || !issue_resolved_confirmed || !customer_satisfaction || !feedback_date || !feedback_rating || !called_by) {
+  if (!response_time || !resolution_time || !resolution_date || !client_reporting_time || !issue_resolved_confirmed || !customer_satisfaction || !feedback_date || !feedback_rating || !called_by || !want_to_refer) {
     const tagRegex = /\[Metadata: [^\]]*\]/;
     const match = details.match(tagRegex);
     if (match) {
@@ -103,6 +104,9 @@ export function parseIssueVirtualFields(issue: any): any {
       const frMatch = tagContent.match(/FeedbackRating="([^"]*)"/);
       if (frMatch && !feedback_rating) feedback_rating = frMatch[1];
 
+      const wtrMatch = tagContent.match(/WantToRefer="([^"]*)"/);
+      if (wtrMatch && !want_to_refer) want_to_refer = wtrMatch[1];
+
       const cbMatch = tagContent.match(/CalledBy="([^"]*)"/);
       if (cbMatch && !called_by) called_by = cbMatch[1];
 
@@ -123,6 +127,7 @@ export function parseIssueVirtualFields(issue: any): any {
     feedback_rating: feedback_rating ? Number(feedback_rating) : undefined,
     customer_satisfaction: customer_satisfaction || '',
     feedback_date: feedback_date || '',
+    want_to_refer: want_to_refer || '',
     called_by: called_by || ''
   };
 }
@@ -334,6 +339,7 @@ export const dbService = {
       if (issue.customer_satisfaction) metaParts.push(`CustomerSatisfaction="${issue.customer_satisfaction}"`);
       if (issue.feedback_date) metaParts.push(`FeedbackDate="${issue.feedback_date}"`);
       if (issue.feedback_rating) metaParts.push(`FeedbackRating="${issue.feedback_rating}"`);
+      if (issue.want_to_refer) metaParts.push(`WantToRefer="${issue.want_to_refer}"`);
       if (issue.called_by) metaParts.push(`CalledBy="${issue.called_by}"`);
 
       let cleanDetails = (issue.issue_details || '').replace(/\[Metadata: [^\]]*\]/, '').trim();
@@ -347,6 +353,7 @@ export const dbService = {
       delete fallbackPayload.feedback_date;
       delete fallbackPayload.resolution_date;
       delete fallbackPayload.feedback_rating;
+      delete fallbackPayload.want_to_refer;
       delete fallbackPayload.called_by;
 
       const retryRes = await supabase
@@ -417,6 +424,7 @@ export const dbService = {
       if (updates.customer_satisfaction !== undefined) metaParts.push(`CustomerSatisfaction="${updates.customer_satisfaction}"`);
       if (updates.feedback_date !== undefined) metaParts.push(`FeedbackDate="${updates.feedback_date}"`);
       if (updates.feedback_rating !== undefined) metaParts.push(`FeedbackRating="${updates.feedback_rating}"`);
+      if (updates.want_to_refer !== undefined) metaParts.push(`WantToRefer="${updates.want_to_refer}"`);
       if (updates.called_by !== undefined) metaParts.push(`CalledBy="${updates.called_by}"`);
 
       let cleanDetails = ((updates.issue_details || '') as string).replace(/\[Metadata: [^\]]*\]/, '').trim();
@@ -430,6 +438,7 @@ export const dbService = {
       delete fallbackUpdates.feedback_date;
       delete fallbackUpdates.resolution_date;
       delete fallbackUpdates.feedback_rating;
+      delete fallbackUpdates.want_to_refer;
       delete fallbackUpdates.called_by;
 
       const retryRes = await supabase

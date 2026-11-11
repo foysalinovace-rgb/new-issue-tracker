@@ -183,7 +183,7 @@ export async function createStyledReport(source: WorkBook, options: { template?:
         const isNumeric = typeof cell.value === 'number';
         const isDateCol = /date/i.test(heading);
         const isMoneyCol = /(?:revenue|amount|price|fee|value|mrr|billing|paid|due|bdt|discount)/i.test(heading);
-        const isCenterCol = /^sl\b|^#\b|status|priority|rating|resolved/i.test(heading);
+        const isCenterCol = /^sl\b|^#\b|status|priority|rating|resolved|refer/i.test(heading);
 
         // Crisp, visible Slate 300 border so every row line is clearly demarcated
         const edge = { style: 'thin' as const, color: { argb: colors.line } };

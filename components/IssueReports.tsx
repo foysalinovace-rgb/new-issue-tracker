@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { dbService } from '../services/dbService';
 import { Issue, SettingItem } from '../types';
 import { PRIORITY_COLORS, STATUS_COLORS } from '../constants';
-import { Search, Filter, Download, Trash2, Edit2, X, ChevronLeft, ChevronRight, Upload, FileSpreadsheet, CheckSquare, Square, Smile, Link2, Copy, Check, ExternalLink, Share2, Eye, Clock, CheckCircle2, User, Calendar, Tag, MessageSquare } from 'lucide-react';
+import { Search, Filter, Download, Trash2, Edit2, X, ChevronLeft, ChevronRight, Upload, FileSpreadsheet, CheckSquare, Square, Smile, Link2, Copy, Check, ExternalLink, Share2, Eye, Clock, CheckCircle2, User, Calendar, Tag, MessageSquare, HeartHandshake } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 // Extract YYYY-MM-DD from any date string or Date object
@@ -496,6 +496,7 @@ const IssueReports: React.FC = () => {
       'Feedback Rating',
       'Customer Satisfaction',
       'Feedback Date',
+      'Want to Refer?',
       'Called By',
       'System Log Time'
     ];
@@ -529,6 +530,7 @@ const IssueReports: React.FC = () => {
       i.feedback_rating !== undefined && i.feedback_rating !== null ? i.feedback_rating : '',
       i.customer_satisfaction || '',
       i.feedback_date || '',
+      i.want_to_refer || '',
       i.called_by || '',
       i.created_at ? new Date(i.created_at).toLocaleString() : ''
     ]);
@@ -557,13 +559,14 @@ const IssueReports: React.FC = () => {
       { wch: 24 },  // Feedback Rating
       { wch: 24 },  // Customer Satisfaction
       { wch: 18 },  // Feedback Date
+      { wch: 18 },  // Want to Refer?
       { wch: 22 },  // Called By
       { wch: 24 }   // System Log Time
     ];
     ws['!cols'] = wscols;
 
     if (rows.length > 0) {
-      ws['!autofilter'] = { ref: `A1:U${rows.length + 1}` };
+      ws['!autofilter'] = { ref: `A1:V${rows.length + 1}` };
     }
 
     const wb = XLSX.utils.book_new();
@@ -815,6 +818,7 @@ const IssueReports: React.FC = () => {
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center whitespace-nowrap">Feedback Rating</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Satisfaction</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Feedback Date</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Want to Refer?</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Called By</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right whitespace-nowrap sticky-action-header">Actions</th>
               </tr>
@@ -920,6 +924,19 @@ const IssueReports: React.FC = () => {
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
                     {issue.feedback_date || '-'}
                   </td>
+                  <td className="px-4 py-2.5 text-xs font-medium whitespace-nowrap">
+                    {issue.want_to_refer ? (
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border inline-block ${
+                        issue.want_to_refer === 'Yes'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+                          : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800'
+                      }`}>
+                        {issue.want_to_refer}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 text-xs">-</span>
+                    )}
+                  </td>
                   <td className="px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
                     {issue.called_by ? (
                       <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md inline-block">
@@ -963,7 +980,7 @@ const IssueReports: React.FC = () => {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={20} className="px-4 py-10 text-center text-slate-400 text-xs">
+                  <td colSpan={21} className="px-4 py-10 text-center text-slate-400 text-xs">
                     No issues found matching your criteria.
                   </td>
                 </tr>
@@ -1269,7 +1286,7 @@ const IssueReports: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="v2-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  <div className="v2-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
                     <div className="space-y-1.5">
                       <label className="v2-label text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                         Resolved Confirmed
@@ -1349,6 +1366,21 @@ const IssueReports: React.FC = () => {
                         onChange={(e) => setEditingIssue({...editingIssue, feedback_date: e.target.value})}
                         className="v2-control w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs"
                       />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="v2-label text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                        Want to Refer?
+                      </label>
+                      <select 
+                        value={editingIssue.want_to_refer || ''}
+                        onChange={(e) => setEditingIssue({...editingIssue, want_to_refer: e.target.value})}
+                        className="v2-control w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white text-xs font-medium"
+                      >
+                        <option value="">Select Option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
                     </div>
 
                     <div className="space-y-1.5">
@@ -1660,6 +1692,22 @@ const IssueReports: React.FC = () => {
 
                   <div className="bg-white dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between">
                     <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <HeartHandshake size={13} className="text-slate-400" />
+                      Want to Refer?:
+                    </span>
+                    <span className={`text-xs font-bold ${
+                      viewingIssue.want_to_refer === 'Yes'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : viewingIssue.want_to_refer === 'No'
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : 'text-slate-500'
+                    }`}>
+                      {viewingIssue.want_to_refer || '-'}
+                    </span>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-3 rounded-xl flex items-center justify-between">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <User size={13} className="text-slate-400" />
                       Called By:
                     </span>
@@ -1746,7 +1794,7 @@ const IssueReports: React.FC = () => {
                       <span>Share Feedback Link</span>
                     </button>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
                     <div>
                       <span className="text-slate-400 text-[11px] block">Rating (1-5)</span>
                       <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
@@ -1763,6 +1811,18 @@ const IssueReports: React.FC = () => {
                       <span className="text-slate-400 text-[11px] block">Feedback Date</span>
                       <span className="font-semibold text-slate-800 dark:text-slate-200">
                         {viewingIssue.feedback_date || '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Want to Refer?</span>
+                      <span className={`font-semibold ${
+                        viewingIssue.want_to_refer === 'Yes'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : viewingIssue.want_to_refer === 'No'
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : 'text-slate-500'
+                      }`}>
+                        {viewingIssue.want_to_refer || '-'}
                       </span>
                     </div>
                   </div>

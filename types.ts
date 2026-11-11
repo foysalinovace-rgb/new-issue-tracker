@@ -41,6 +41,7 @@ export interface Issue {
   feedback_rating?: number;
   customer_satisfaction?: 'Very Poor' | 'Poor' | 'Average' | 'Good' | 'Excellent' | 'Satisfied' | 'Neutral' | 'Dissatisfied' | string;
   feedback_date?: string;
+  want_to_refer?: 'Yes' | 'No' | string;
   called_by?: string;
 }
 
