@@ -1,7 +1,7 @@
 import { useAuth } from './auth/AuthProvider';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, ArrowUpRight, BadgeDollarSign, BarChart3, CalendarDays, ChevronDown, ChevronRight, ChevronsLeft, CircleHelp, Clock3, Database, FileBarChart2, FileText, HeartHandshake, LayoutDashboard, LogOut, Megaphone, Menu, Moon, Plus, Search, Settings, ShieldCheck, Smile, Star, Sun, Users, X, Lock, Sliders, Eye, EyeOff } from 'lucide-react';
+import { Activity, ArrowUpRight, BadgeDollarSign, BarChart3, CalendarDays, ChevronDown, ChevronRight, ChevronsLeft, CircleHelp, Clock3, Database, FileBarChart2, FileText, HeartHandshake, LayoutDashboard, LogOut, Megaphone, Menu, Moon, Plus, Search, Settings, ShieldCheck, Smile, Sun, Users, X, Lock, Sliders, Eye, EyeOff } from 'lucide-react';
 import { DrawerPortal } from './common/DrawerPortal';
 import { dbService, applyFaviconAndTitle } from '../services/dbService';
 import { adminAuthService, ModuleConfig } from '../services/adminAuthService';
@@ -15,7 +15,6 @@ const groups: { label: string; items: Item[] }[] = [
     { label: 'Analytics', path: '/analytics', icon: BarChart3, module: 'Analytics' },
     { label: 'CSAT Report', path: '/csat-report', icon: Smile, module: 'CSATReport' },
     { label: 'Weekly report', path: '/weekly-report', icon: FileBarChart2, module: 'WeeklyReport' },
-    { label: 'Review tracker', path: '/review-tracker', icon: Star, module: 'ReviewTracker' },
   ]},
   { label: 'BUSINESS', items: [
     { label: 'Sales dashboard', path: '/sales/dashboard', icon: BadgeDollarSign, module: 'Sales' },

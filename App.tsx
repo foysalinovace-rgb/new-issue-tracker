@@ -30,7 +30,6 @@ import { AdminLoginPage } from './components/admin/AdminLoginPage';
 import { AdminPanelPage } from './components/admin/AdminPanelPage';
 import { CustomerFeedbackPage } from './components/CustomerFeedbackPage';
 import { ModuleRouteGuard } from './components/common/ModuleRouteGuard';
-import ReviewTracker from './components/ReviewTracker';
 
 const App: React.FC = () => {
   return (
@@ -139,14 +138,6 @@ const App: React.FC = () => {
             element={
               <ModuleRouteGuard moduleId="WeeklyReport" moduleName="Weekly Report">
                 <WeeklyReport />
-              </ModuleRouteGuard>
-            } 
-          />
-          <Route 
-            path="/review-tracker" 
-            element={
-              <ModuleRouteGuard moduleId="ReviewTracker" moduleName="Review Tracker">
-                <ReviewTracker />
               </ModuleRouteGuard>
             } 
           />
