@@ -50,7 +50,7 @@ The login page has no top logo/name or decorative icon. Its footer reads “Inov
 
 Module navigation lives in the sidebar. Module headers, report shortcuts, success banners, and Sales/Retention toolbars have no links to other modules. Save, edit, export, and modal actions remain available. The sidebar scrolls without displaying a scrollbar.
 
-Issue Entry follows this order: Client & Classification, Ownership & Status, Timing & SLA Metrics, Resolution Confirmation & Customer Feedback, then Issue Description & Findings. Module headers display their title and description without category labels. Customer satisfaction is named CSAT Report in navigation and its page header. Overview's recent-issues panel uses the full row; its former shortcut panel is removed.
+Issue Entry follows this order: Client & Classification, Ownership & Status, Timing & SLA Metrics, then Issue Description & Findings (Resolution Confirmation & Customer Feedback is configured during Issue Edit). Module headers display their title and description without category labels. Customer satisfaction is named CSAT Report in navigation and its page header. Overview's recent-issues panel uses the full row; its former shortcut panel is removed.
 
 CSAT Report's interface and Excel labels use English only. Customer-entered data retains its original text.
 

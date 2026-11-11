@@ -50,7 +50,7 @@ for (const width of [1440, 390]) {
 
   await page.goto('http://localhost:3000/issue-entry');
   await page.locator('.page-content').waitFor();
-  const expectedSections = ['Client & Classification', 'Ownership & Status', 'Timing & SLA Metrics', 'Resolution Confirmation & Customer Feedback', 'Issue Description & Findings'];
+  const expectedSections = ['Client & Classification', 'Ownership & Status', 'Timing & SLA Metrics', 'Issue Description & Findings'];
   const headings = await page.locator('.issue-entry-sections > .v2-surface .editor-section-intro h2').allTextContents();
   assert.deepEqual(headings.map(text => text.replace(/\s+/g, ' ').trim()), expectedSections);
   const positions = await page.locator('.issue-entry-sections > .v2-surface').evaluateAll(sections => sections.map(el => ({ top: el.getBoundingClientRect().top, bottom: el.getBoundingClientRect().bottom })));
@@ -87,7 +87,7 @@ for (const width of [1440, 390]) {
   const dialog = page.getByRole('dialog', { name: 'Edit Issue Ticket', exact: true });
   await dialog.waitFor();
   const timing = page.getByRole('group', { name: 'Timing & SLA Metrics', exact: true });
-  const feedback = page.getByRole('group', { name: 'Bug Resolution & Feedback', exact: true });
+  const feedback = page.getByRole('group', { name: 'Resolution Confirmation & Customer Feedback', exact: true });
   for (const [name, section] of [['timing', timing], ['feedback', feedback]]) {
     await section.scrollIntoViewIfNeeded();
     const dimensions = await section.evaluate(el => ({ width: el.clientWidth, scroll: el.scrollWidth, columns: getComputedStyle(el.querySelector('.v2-grid')).gridTemplateColumns.split(' ').length, fields: Array.from(el.querySelectorAll('input, select')).map(control => ({ width: control.clientWidth, height: control.getBoundingClientRect().height })) }));

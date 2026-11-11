@@ -17,6 +17,7 @@ export interface ModuleConfig {
   NoticeGenerator: boolean;
   SimFinder: boolean;
   Settings: boolean;
+  ReviewTracker: boolean;
 }
 
 export const DEFAULT_MODULE_CONFIG: ModuleConfig = {
@@ -35,6 +36,7 @@ export const DEFAULT_MODULE_CONFIG: ModuleConfig = {
   NoticeGenerator: true,
   SimFinder: true,
   Settings: true,
+  ReviewTracker: true,
 };
 
 export interface ModuleItemMeta {
@@ -47,6 +49,7 @@ export interface ModuleItemMeta {
 
 export const MODULE_META_LIST: ModuleItemMeta[] = [
   { id: 'Dashboard', label: 'Dashboard', description: 'Overview and system metrics', category: 'Main', path: '/dashboard' },
+  { id: 'ReviewTracker', label: 'Review Tracker', description: 'Google Maps customer reviews, star ratings & feedback tracking', category: 'Main', path: '/review-tracker' },
   { id: 'Sales', label: 'Sales (Parent Module)', description: 'Sales entry, multi-product line items, orders & revenue reports', category: 'Main', path: '/sales/dashboard' },
   { id: 'Retention', label: 'Retention (Parent Module)', description: 'Customer relationship and churn management (7 sections)', category: 'Retention', path: '/retention/dashboard' },
   { id: 'IssueEntry', label: 'Issue Entry', description: 'Log client issue tickets', category: 'Issues', path: '/issue-entry' },
@@ -209,6 +212,7 @@ export const adminAuthService = {
       NoticeGenerator: state,
       SimFinder: state,
       Settings: state,
+      ReviewTracker: state,
     };
     this.saveModuleConfig(updated);
     return updated;

@@ -1257,12 +1257,12 @@ const IssueReports: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Bug Resolution & Feedback Section */}
-                <div className="bg-indigo-50/50 dark:bg-indigo-950/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/40 space-y-3 issue-edit-section issue-edit-feedback" role="group" aria-label="Bug Resolution & Feedback">
+                {/* Resolution Confirmation & Customer Feedback Section */}
+                <div className="bg-indigo-50/50 dark:bg-indigo-950/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/40 space-y-3 issue-edit-section issue-edit-feedback" role="group" aria-label="Resolution Confirmation & Customer Feedback">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>
-                      Bug Resolution & Feedback
+                      Resolution Confirmation & Customer Feedback
                     </span>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500">
                       {isSystemBug(editingIssue.issue_type) ? 'System Bug Feedback' : 'Optional Feedback'}

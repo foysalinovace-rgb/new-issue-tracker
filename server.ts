@@ -37,6 +37,7 @@ const DEFAULT_SERVER_MODULE_CONFIG = {
   NoticeGenerator: true,
   SimFinder: true,
   Settings: true,
+  ReviewTracker: true,
 };
 
 function readModuleConfigFromFile() {
@@ -141,6 +142,156 @@ async function startServer() {
         success: false, 
         error: error.message || 'Failed to sync with Google Sheets' 
       });
+    }
+  });
+
+  const REVIEWS_FILE = path.join(DATA_DIR, 'google-maps-reviews.json');
+
+  function readReviewsData() {
+    try {
+      if (fs.existsSync(REVIEWS_FILE)) {
+        return JSON.parse(fs.readFileSync(REVIEWS_FILE, 'utf-8'));
+      }
+    } catch (e) {
+      console.error('Failed reading reviews file:', e);
+    }
+    return {
+      place: {
+        id: 'ChIJMWfQRJWHEAYRLCYbtfI0ZU4',
+        name: 'Tipsoi',
+        category: 'Software company',
+        address: 'Nad Al Sheba, Meydan Grandstand, Dubai, United Arab Emirates',
+        location: { latitude: 25.1105788, longitude: 55.317707 },
+        rating: 4.7,
+        userRatingCount: 3,
+        websiteUri: 'https://tipsoi.ai',
+        nationalPhoneNumber: '+971 54 567 9417',
+        googleMapsUri: 'https://www.google.com/maps/place//@25.1105788,55.317707,8z/data=!3m1!4b1!4m3!3m2!1s0x610879544d06731:0x4e6534f2b51b262c!12e1',
+        writeReviewUri: 'https://search.google.com/local/writereview?placeid=ChIJMWfQRJWHEAYRLCYbtfI0ZU4',
+        lastSyncedAt: new Date().toISOString(),
+      },
+      reviews: []
+    };
+  }
+
+  function writeReviewsData(data: any) {
+    try {
+      if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.writeFileSync(REVIEWS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (e) {
+      console.error('Failed writing reviews file:', e);
+    }
+  }
+
+  // Google Maps Reviews - Fetch & Track
+  app.get('/api/google-maps/reviews', async (req, res) => {
+    try {
+      const data = readReviewsData();
+      const apiKey = process.env.VITE_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY;
+      const placeId = (req.query.placeId as string) || data.place?.id || 'ChIJMWfQRJWHEAYRLCYbtfI0ZU4';
+
+      if (req.query.refresh === 'true' && apiKey) {
+        try {
+          const gmpUrl = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`;
+          const response = await fetch(gmpUrl, {
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': apiKey,
+              'X-Goog-FieldMask': 'id,displayName,rating,userRatingCount,reviews,googleMapsLinks,googleMapsUri,formattedAddress',
+              'X-Goog-Maps-Solution-ID': 'gmp_mcp_codeassist_v1_aistudio',
+            },
+            signal: AbortSignal.timeout(10000),
+          });
+
+          if (response.ok) {
+            const apiResult = await response.json();
+            if (apiResult.displayName?.text) data.place.name = apiResult.displayName.text;
+            if (typeof apiResult.rating === 'number') data.place.rating = apiResult.rating;
+            if (typeof apiResult.userRatingCount === 'number') data.place.userRatingCount = apiResult.userRatingCount;
+            if (apiResult.formattedAddress) data.place.address = apiResult.formattedAddress;
+            if (apiResult.googleMapsUri) data.place.googleMapsUri = apiResult.googleMapsUri;
+            if (apiResult.googleMapsLinks?.writeAReviewUri) data.place.writeReviewUri = apiResult.googleMapsLinks.writeAReviewUri;
+
+            if (Array.isArray(apiResult.reviews) && apiResult.reviews.length > 0) {
+              const existingIds = new Set(data.reviews.map((r: any) => r.id));
+              for (const r of apiResult.reviews) {
+                const rid = r.name?.split('/').pop() || `gmp-${Date.now()}`;
+                if (!existingIds.has(rid)) {
+                  data.reviews.unshift({
+                    id: rid,
+                    authorName: r.authorAttribution?.displayName || 'Anonymous Google User',
+                    authorPhotoUrl: r.authorAttribution?.photoURI || null,
+                    authorUri: r.authorAttribution?.uri || null,
+                    rating: r.rating || 5,
+                    publishTime: r.publishTime || new Date().toISOString(),
+                    relativePublishTimeDescription: r.relativePublishTimeDescription || 'recently',
+                    text: r.text?.text || r.originalText?.text || '',
+                    source: 'Google Maps Verified Review',
+                    responseStatus: 'Needs Response',
+                    responseNote: '',
+                    clientSegment: 'Google Maps User'
+                  });
+                }
+              }
+            }
+            data.place.lastSyncedAt = new Date().toISOString();
+            writeReviewsData(data);
+          }
+        } catch (apiErr) {
+          console.error('Google Maps API fetch error (using cached reviews):', apiErr);
+        }
+      }
+
+      res.status(200).json({ success: true, data });
+    } catch (error: any) {
+      console.error('Error in reviews endpoint:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Update or add review in tracker
+  app.post('/api/google-maps/reviews', (req, res) => {
+    try {
+      const data = readReviewsData();
+      const { review, updateId } = req.body;
+
+      if (updateId) {
+        const idx = data.reviews.findIndex((r: any) => r.id === updateId);
+        if (idx !== -1) {
+          data.reviews[idx] = { ...data.reviews[idx], ...review };
+          writeReviewsData(data);
+          return res.status(200).json({ success: true, review: data.reviews[idx] });
+        }
+        return res.status(404).json({ success: false, error: 'Review not found' });
+      }
+
+      if (review) {
+        const newReview = {
+          id: `manual-${Date.now()}`,
+          authorName: review.authorName || 'Anonymous Client',
+          authorPhotoUrl: review.authorPhotoUrl || null,
+          rating: Number(review.rating) || 5,
+          publishTime: review.publishTime || new Date().toISOString(),
+          relativePublishTimeDescription: 'Just now',
+          text: review.text || '',
+          source: review.source || 'Google Maps Client',
+          responseStatus: review.responseStatus || 'Acknowledged',
+          responseNote: review.responseNote || '',
+          clientSegment: review.clientSegment || 'Enterprise Client'
+        };
+        data.reviews.unshift(newReview);
+        // Recalculate average rating
+        const totalRating = data.reviews.reduce((sum: number, r: any) => sum + (Number(r.rating) || 0), 0);
+        data.place.rating = Math.round((totalRating / data.reviews.length) * 10) / 10;
+        data.place.userRatingCount = data.reviews.length;
+        writeReviewsData(data);
+        return res.status(201).json({ success: true, review: newReview, place: data.place });
+      }
+
+      res.status(400).json({ success: false, error: 'Invalid payload' });
+    } catch (error: any) {
+      console.error('Error saving review:', error);
+      res.status(500).json({ success: false, error: error.message });
     }
   });
 
