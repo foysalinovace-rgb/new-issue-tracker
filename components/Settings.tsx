@@ -46,6 +46,7 @@ const Settings: React.FC = () => {
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [settingsError, setSettingsError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<{show: boolean, id: string | null}>({ show: false, id: null });
 
   // Workspace Control Unlock State
@@ -123,27 +124,50 @@ const Settings: React.FC = () => {
     setBrandingForm(b);
   };
 
+  const formatSettingsError = (err: any, action: string) => {
+    const msg = String(err?.message || err?.error_description || '');
+    if (err?.code === '42501' || /row-level security|permission denied/i.test(msg)) {
+      return 'Supabase RLS policy blocked updating "settings". Ensure SELECT, INSERT, UPDATE, and DELETE policies allow the anon role.';
+    }
+    return msg ? `Failed to ${action}: ${msg}` : `Failed to ${action}. Please try again.`;
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || activeCategory === 'branding' || activeCategory === 'workspace_control') return;
-    await dbService.saveSetting({ category: activeCategory as SettingItem['category'], name: newName.trim() });
-    setNewName('');
-    loadSettings();
+    setSettingsError('');
+    try {
+      await dbService.saveSetting({ category: activeCategory as SettingItem['category'], name: newName.trim() });
+      setNewName('');
+      loadSettings();
+    } catch (err: any) {
+      console.error('Failed to add setting:', err);
+      setSettingsError(formatSettingsError(err, 'add option'));
+    }
   };
 
   const handleDelete = (id: string) => {
+    setSettingsError('');
     setShowDeleteConfirm({ show: true, id });
   };
 
   const confirmDelete = async () => {
     if (showDeleteConfirm.id) {
-      await dbService.deleteSetting(showDeleteConfirm.id);
-      setShowDeleteConfirm({ show: false, id: null });
-      loadSettings();
+      setSettingsError('');
+      try {
+        await dbService.deleteSetting(showDeleteConfirm.id);
+        setShowDeleteConfirm({ show: false, id: null });
+        loadSettings();
+      } catch (err: any) {
+        console.error('Failed to delete setting:', err);
+        setShowDeleteConfirm({ show: false, id: null });
+        setSettingsError(formatSettingsError(err, 'delete option'));
+      }
     }
   };
 
   const startEditing = (item: SettingItem) => {
+    setSettingsError('');
     setEditingId(item.id);
     setEditingName(item.name);
   };
@@ -155,10 +179,16 @@ const Settings: React.FC = () => {
 
   const handleUpdate = async (id: string) => {
     if (!editingName.trim()) return;
-    await dbService.updateSetting(id, editingName.trim());
-    setEditingId(null);
-    setEditingName('');
-    loadSettings();
+    setSettingsError('');
+    try {
+      await dbService.updateSetting(id, editingName.trim());
+      setEditingId(null);
+      setEditingName('');
+      loadSettings();
+    } catch (err: any) {
+      console.error('Failed to update setting:', err);
+      setSettingsError(formatSettingsError(err, 'update option'));
+    }
   };
 
   // Branding Logo Handlers
@@ -285,6 +315,7 @@ const Settings: React.FC = () => {
                 key={cat.id}
                 onClick={() => {
                   setActiveCategory(cat.id);
+                  setSettingsError('');
                   cancelEditing();
                 }}
                 className={"v2-button " + (`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-between ${
@@ -568,6 +599,11 @@ const Settings: React.FC = () => {
                     Add
                   </button>
                 </form>
+                {settingsError && (
+                  <div role="alert" className="editor-alert error">
+                    {settingsError}
+                  </div>
+                )}
 
                 <div className="bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                   <table className="v2-ledger w-full text-left">

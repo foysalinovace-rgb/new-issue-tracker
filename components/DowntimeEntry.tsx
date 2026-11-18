@@ -15,7 +15,27 @@ export default function DowntimeEntry() {
     let duration = (end.getTime() - start.getTime()) / 60000; if (duration < 0) duration += 1440;
     setFormData(old => ({ ...old, duration_minutes: Number.isFinite(duration) ? Math.round(duration) : 0 }));
   }, [formData.date, formData.start_time, formData.end_time]);
-  const submit = async (e: React.FormEvent) => { e.preventDefault(); setLoading(true); setError(''); setSuccess(false); try { await dbService.saveDowntime(formData); setSuccess(true); setTimeout(() => setSuccess(false), 3000); } catch { setError('Could not save this incident. Please try again.'); } finally { setLoading(false); } };
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess(false);
+    try {
+      await dbService.saveDowntime(formData);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      console.error('Failed to save downtime entry:', err);
+      const msg = String(err?.message || err?.error_description || '');
+      if (err?.code === '42501' || /row-level security|permission denied/i.test(msg)) {
+        setError('Supabase RLS policy blocked saving to "system_downtime". Ensure SELECT and INSERT policies allow the anon role.');
+      } else {
+        setError(msg ? `Could not save this incident: ${msg}` : 'Could not save this incident. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
   return <ModuleWorkspace id="DowntimeEntry" number="08" title="Incident recorder" description="Capture an interruption, its affected system and the recovery window." category="Infrastructure" kind="editor" links={[{ label: 'Incident history', path: '/downtime-reports' }]}><div className="v2-page-content"><form className="v2-form incident-editor" onSubmit={submit}>
     <div className="editor-section-heading"><span className="editor-section-no">01</span><div><h2>Incident details</h2><p>Where and when did the interruption happen?</p></div></div>
     <div className="incident-fields"><div><label htmlFor="incident-date" className="v2-label"><CalendarDays size={13} />Incident date</label><input className="v2-control" id="incident-date" required type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} /></div><div><label htmlFor="incident-system" className="v2-label"><Radio size={13} />Impacted system</label><select className="v2-control" id="incident-system" required value={formData.system_name} onChange={e => setFormData({ ...formData, system_name: e.target.value })}>{!systems.length && <option value="">No systems configured</option>}{systems.map(s => <option key={s.id}>{s.name}</option>)}</select></div></div>
