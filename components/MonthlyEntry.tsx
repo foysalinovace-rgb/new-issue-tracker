@@ -17,8 +17,21 @@ export default function MonthlyEntry() {
   const [success, setSuccess] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setIsLoading(true); setError(''); setSuccess(false);
-    try { await dbService.saveMonthlyEntry(formData); setSuccess(true); setTimeout(() => setSuccess(false), 3000); }
-    catch { setError('Failed to save entry. Please try again.'); } finally { setIsLoading(false); }
+    try {
+      await dbService.saveMonthlyEntry(formData);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      console.error('Failed to save monthly entry:', err);
+      const msg = String(err?.message || err?.error_description || '');
+      if (err?.code === '42501' || /row-level security|permission denied/i.test(msg)) {
+        setError('Supabase RLS policy blocked saving to "monthly_entries". Ensure SELECT and INSERT policies allow the anon role.');
+      } else {
+        setError(msg ? `Failed to save entry: ${msg}` : 'Failed to save entry. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
   return <ModuleWorkspace id="MonthlyEntry" number="06" title="Monthly metrics" description="Close the month with a clear, complete operational snapshot." category="Reporting desk" kind="editor" links={[{ label: 'Monthly reports', path: '/monthly-reports' }]}><div className="v2-page-content">
     <form className="v2-form metric-entry-editor" onSubmit={submit}>
