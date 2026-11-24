@@ -59,25 +59,38 @@ export const isSolvedOrClosed = (status?: string): boolean => {
   return s === 'close' || s === 'closed' || s === 'done';
 };
 
-export const isSatisfiedIssue = (issue: { customer_satisfaction?: string; feedback_rating?: number }): boolean => {
+export const getIssueRating = (issue: { customer_satisfaction?: string; feedback_rating?: number }): number | null => {
+  const num = Number(issue.feedback_rating);
+  if (Number.isFinite(num) && num >= 1 && num <= 5) return Math.round(num);
   const sat = issue.customer_satisfaction?.trim();
-  if (sat === 'Excellent' || sat === 'Good' || sat === 'Satisfied') return true;
-  if (issue.feedback_rating && issue.feedback_rating >= 4) return true;
-  return false;
+  if (sat === 'Excellent') return 5;
+  if (sat === 'Good' || sat === 'Satisfied') return 4;
+  if (sat === 'Average' || sat === 'Neutral') return 3;
+  if (sat === 'Poor') return 2;
+  if (sat === 'Very Poor' || sat === 'Dissatisfied') return 1;
+  return null;
+};
+
+export const calculateWeightedCSAT = (totalPoints: number, feedbackCount: number): number => {
+  if (feedbackCount <= 0) return 0;
+  const maxPoints = feedbackCount * 5;
+  const raw = (totalPoints / maxPoints) * 100;
+  const rounded = Math.round(raw * 10) / 10;
+  return totalPoints < maxPoints ? Math.min(99.9, rounded) : 100;
+};
+
+export const isSatisfiedIssue = (issue: { customer_satisfaction?: string; feedback_rating?: number }): boolean => {
+  const r = getIssueRating(issue);
+  return r !== null && r >= 4;
 };
 
 export const isNeutralIssue = (issue: { customer_satisfaction?: string; feedback_rating?: number }): boolean => {
-  const sat = issue.customer_satisfaction?.trim();
-  if (sat === 'Average' || sat === 'Neutral') return true;
-  if (issue.feedback_rating === 3) return true;
-  return false;
+  return getIssueRating(issue) === 3;
 };
 
 export const isDissatisfiedIssue = (issue: { customer_satisfaction?: string; feedback_rating?: number }): boolean => {
-  const sat = issue.customer_satisfaction?.trim();
-  if (sat === 'Poor' || sat === 'Very Poor' || sat === 'Dissatisfied') return true;
-  if (issue.feedback_rating && (issue.feedback_rating === 1 || issue.feedback_rating === 2)) return true;
-  return false;
+  const r = getIssueRating(issue);
+  return r !== null && r <= 2;
 };
 
 const SATISFACTION_COLORS: Record<string, string> = {
@@ -293,11 +306,14 @@ export const CSATReport: React.FC = () => {
     let inProgressCount = 0;
     let pendingCount = 0;
 
-    // Customer satisfaction calculations
+    // Customer satisfaction calculations (weighted 1-5 scale: 5=100%, 4=80%, 3=60%, 2=40%, 1=20%)
+    let rating5 = 0;
+    let rating4 = 0;
     let satisfied = 0;
     let neutral = 0;
     let dissatisfied = 0;
     let feedbackCount = 0;
+    let totalRatingPoints = 0;
 
     // Client confirmation calculations
     let resolvedYes = 0;
@@ -330,15 +346,21 @@ export const CSATReport: React.FC = () => {
       }
 
       // Customer satisfaction check
-      if (isSatisfiedIssue(i)) {
-        satisfied++;
+      const rating = getIssueRating(i);
+      if (rating !== null) {
         feedbackCount++;
-      } else if (isNeutralIssue(i)) {
-        neutral++;
-        feedbackCount++;
-      } else if (isDissatisfiedIssue(i)) {
-        dissatisfied++;
-        feedbackCount++;
+        totalRatingPoints += rating;
+        if (rating === 5) {
+          rating5++;
+          satisfied++;
+        } else if (rating === 4) {
+          rating4++;
+          satisfied++;
+        } else if (rating === 3) {
+          neutral++;
+        } else {
+          dissatisfied++;
+        }
       }
 
       // Issue resolved confirmed check
@@ -356,7 +378,8 @@ export const CSATReport: React.FC = () => {
     });
 
     const closedRate = total > 0 ? Math.round((closedCount / total) * 100) : 0;
-    const csatScore = feedbackCount > 0 ? Math.round((satisfied / feedbackCount) * 100) : 0;
+    const csatScore = calculateWeightedCSAT(totalRatingPoints, feedbackCount);
+    const averageRating = feedbackCount > 0 ? Math.round((totalRatingPoints / feedbackCount) * 100) / 100 : 0;
     const resolvedRate = resolvedCount > 0 ? Math.round((resolvedYes / resolvedCount) * 100) : 0;
     const feedbackRate = total > 0 ? Math.round((feedbackCount / total) * 100) : 0;
 
@@ -369,9 +392,13 @@ export const CSATReport: React.FC = () => {
       closedRate,
       feedbackCount,
       feedbackRate,
+      rating5,
+      rating4,
       satisfied,
       neutral,
       dissatisfied,
+      totalRatingPoints,
+      averageRating,
       csatScore,
       resolvedYes,
       resolvedNo,
@@ -393,6 +420,7 @@ export const CSATReport: React.FC = () => {
       neutral: number;
       dissatisfied: number;
       totalFeedback: number;
+      totalRatingPoints: number;
       resolvedYes: number;
       totalResolved: number;
     }>();
@@ -413,6 +441,7 @@ export const CSATReport: React.FC = () => {
           neutral: 0,
           dissatisfied: 0,
           totalFeedback: 0,
+          totalRatingPoints: 0,
           resolvedYes: 0,
           totalResolved: 0
         });
@@ -425,15 +454,17 @@ export const CSATReport: React.FC = () => {
         entry.closedCount++;
       }
 
-      if (isSatisfiedIssue(issue)) {
-        entry.satisfied++;
+      const rating = getIssueRating(issue);
+      if (rating !== null) {
         entry.totalFeedback++;
-      } else if (isNeutralIssue(issue)) {
-        entry.neutral++;
-        entry.totalFeedback++;
-      } else if (isDissatisfiedIssue(issue)) {
-        entry.dissatisfied++;
-        entry.totalFeedback++;
+        entry.totalRatingPoints += rating;
+        if (rating >= 4) {
+          entry.satisfied++;
+        } else if (rating === 3) {
+          entry.neutral++;
+        } else {
+          entry.dissatisfied++;
+        }
       }
 
       const res = issue.issue_resolved_confirmed?.trim();
@@ -448,7 +479,7 @@ export const CSATReport: React.FC = () => {
     const sortedMonths = Array.from(monthsMap.values()).sort((a, b) => a.month.localeCompare(b.month));
 
     return sortedMonths.map(m => {
-      const csat = m.totalFeedback > 0 ? Math.round((m.satisfied / m.totalFeedback) * 100) : 0;
+      const csat = calculateWeightedCSAT(m.totalRatingPoints, m.totalFeedback);
       const closedRate = m.totalIssues > 0 ? Math.round((m.closedCount / m.totalIssues) * 100) : 0;
       const resolvedRate = m.totalResolved > 0 ? Math.round((m.resolvedYes / m.totalResolved) * 100) : 0;
       return {
@@ -467,17 +498,9 @@ export const CSATReport: React.FC = () => {
     const unratedIssues: Issue[] = [];
 
     filteredIssues.forEach(i => {
-      let r = i.feedback_rating;
-      if (!r) {
-        const sat = (i.customer_satisfaction || '').trim();
-        if (sat === 'Excellent') r = 5;
-        else if (sat === 'Good' || sat === 'Satisfied') r = 4;
-        else if (sat === 'Average' || sat === 'Neutral') r = 3;
-        else if (sat === 'Poor') r = 2;
-        else if (sat === 'Very Poor' || sat === 'Dissatisfied') r = 1;
-      }
+      const r = getIssueRating(i);
 
-      if (r && r >= 1 && r <= 5) {
+      if (r !== null) {
         counts[r] = (counts[r] || 0) + 1;
         issuesByRating[r].push(i);
       } else {
@@ -491,8 +514,8 @@ export const CSATReport: React.FC = () => {
       {
         rating: 5 as const,
         label: 'Excellent',
-        emoji: '😊',
-        point: '5 Point',
+        emoji: '🤩',
+        point: '5 Point • 100%',
         count: counts[5],
         percentage: totalRated > 0 ? Math.round((counts[5] / totalRated) * 100) : 0,
         badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700',
@@ -504,7 +527,7 @@ export const CSATReport: React.FC = () => {
         rating: 4 as const,
         label: 'Good',
         emoji: '😊',
-        point: '4 Point',
+        point: '4 Point • 80%',
         count: counts[4],
         percentage: totalRated > 0 ? Math.round((counts[4] / totalRated) * 100) : 0,
         badgeClass: 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-700',
@@ -516,7 +539,7 @@ export const CSATReport: React.FC = () => {
         rating: 3 as const,
         label: 'Average',
         emoji: '😐',
-        point: '3 Point',
+        point: '3 Point • 60%',
         count: counts[3],
         percentage: totalRated > 0 ? Math.round((counts[3] / totalRated) * 100) : 0,
         badgeClass: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700',
@@ -527,8 +550,8 @@ export const CSATReport: React.FC = () => {
       {
         rating: 2 as const,
         label: 'Poor',
-        emoji: '😡',
-        point: '2 Point',
+        emoji: '🙁',
+        point: '2 Point • 40%',
         count: counts[2],
         percentage: totalRated > 0 ? Math.round((counts[2] / totalRated) * 100) : 0,
         badgeClass: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-700',
@@ -540,7 +563,7 @@ export const CSATReport: React.FC = () => {
         rating: 1 as const,
         label: 'Very Poor',
         emoji: '😡',
-        point: '1 Point',
+        point: '1 Point • 20%',
         count: counts[1],
         percentage: totalRated > 0 ? Math.round((counts[1] / totalRated) * 100) : 0,
         badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-700',
@@ -638,17 +661,18 @@ export const CSATReport: React.FC = () => {
       ['CUSTOMER SATISFACTION (CSAT)', ''],
       ['Total Feedbacks Collected', stats.feedbackCount],
       ['Feedback Collection Rate', `${stats.feedbackRate}%`],
-      ['Overall CSAT Score (% Satisfied)', `${stats.csatScore}%`],
-      ['Satisfied Responses', stats.satisfied],
-      ['Neutral Responses', stats.neutral],
-      ['Dissatisfied Responses', stats.dissatisfied],
+      ['Overall CSAT Score (Weighted 1-5 Scale)', `${stats.csatScore}%`],
+      ['Average Feedback Rating', stats.feedbackCount > 0 ? `${stats.averageRating.toFixed(2)} / 5` : 'N/A'],
+      ['Satisfied Responses (4-5 Stars)', stats.satisfied],
+      ['Neutral Responses (3 Stars)', stats.neutral],
+      ['Dissatisfied Responses (1-2 Stars)', stats.dissatisfied],
       ['', ''],
       ['FEEDBACK RATINGS BREAKDOWN', ''],
-      ['Rating 5 - Excellent', `${ratingDetails.cards.find(c => c.rating === 5)?.count || 0} (${ratingDetails.cards.find(c => c.rating === 5)?.percentage || 0}%)`],
-      ['Rating 4 - Good', `${ratingDetails.cards.find(c => c.rating === 4)?.count || 0} (${ratingDetails.cards.find(c => c.rating === 4)?.percentage || 0}%)`],
-      ['Rating 3 - Average', `${ratingDetails.cards.find(c => c.rating === 3)?.count || 0} (${ratingDetails.cards.find(c => c.rating === 3)?.percentage || 0}%)`],
-      ['Rating 2 - Poor', `${ratingDetails.cards.find(c => c.rating === 2)?.count || 0} (${ratingDetails.cards.find(c => c.rating === 2)?.percentage || 0}%)`],
-      ['Rating 1 - Very Poor', `${ratingDetails.cards.find(c => c.rating === 1)?.count || 0} (${ratingDetails.cards.find(c => c.rating === 1)?.percentage || 0}%)`],
+      ['Rating 5 - Excellent (100% Weight)', `${ratingDetails.cards.find(c => c.rating === 5)?.count || 0} (${ratingDetails.cards.find(c => c.rating === 5)?.percentage || 0}%)`],
+      ['Rating 4 - Good (80% Weight)', `${ratingDetails.cards.find(c => c.rating === 4)?.count || 0} (${ratingDetails.cards.find(c => c.rating === 4)?.percentage || 0}%)`],
+      ['Rating 3 - Average (60% Weight)', `${ratingDetails.cards.find(c => c.rating === 3)?.count || 0} (${ratingDetails.cards.find(c => c.rating === 3)?.percentage || 0}%)`],
+      ['Rating 2 - Poor (40% Weight)', `${ratingDetails.cards.find(c => c.rating === 2)?.count || 0} (${ratingDetails.cards.find(c => c.rating === 2)?.percentage || 0}%)`],
+      ['Rating 1 - Very Poor (20% Weight)', `${ratingDetails.cards.find(c => c.rating === 1)?.count || 0} (${ratingDetails.cards.find(c => c.rating === 1)?.percentage || 0}%)`],
       ['Pending Feedback', ratingDetails.unratedCount],
       ['', ''],
       ['CLIENT RESOLUTION CONFIRMATION', ''],
@@ -897,31 +921,41 @@ export const CSATReport: React.FC = () => {
             <span className="text-3xl font-black text-slate-900 dark:text-white">
               {stats.csatScore}%
             </span>
-            <span className="text-xs text-slate-500">CSAT score</span>
+            <span className="text-xs text-slate-500">
+              {stats.feedbackCount > 0 ? `Avg ${stats.averageRating.toFixed(2)} / 5` : 'CSAT score'}
+            </span>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-center gap-1.5">
-            <div className="flex-1 bg-emerald-50/70 dark:bg-emerald-950/30 py-1.5 px-1 rounded-lg border border-emerald-100 dark:border-emerald-900/40">
-              <div className="text-xs font-black text-emerald-700 dark:text-emerald-400 flex items-center justify-center gap-1">
-                <span>😊</span> <span>{stats.satisfied}</span>
+          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 grid grid-cols-4 text-center gap-1">
+            <div className="bg-emerald-50/70 dark:bg-emerald-950/30 py-1.5 px-1 rounded-lg border border-emerald-100 dark:border-emerald-900/40">
+              <div className="text-xs font-black text-emerald-700 dark:text-emerald-400">
+                {stats.rating5}
               </div>
               <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                4 - 5 Point
+                5★
               </div>
             </div>
-            <div className="flex-1 bg-amber-50/70 dark:bg-amber-950/30 py-1.5 px-1 rounded-lg border border-amber-100 dark:border-amber-900/40">
-              <div className="text-xs font-black text-amber-700 dark:text-amber-400 flex items-center justify-center gap-1">
-                <span>😐</span> <span>{stats.neutral}</span>
+            <div className="bg-teal-50/70 dark:bg-teal-950/30 py-1.5 px-1 rounded-lg border border-teal-100 dark:border-teal-900/40">
+              <div className="text-xs font-black text-teal-700 dark:text-teal-400">
+                {stats.rating4}
+              </div>
+              <div className="text-[10px] font-bold text-teal-600 dark:text-teal-400 mt-0.5">
+                4★
+              </div>
+            </div>
+            <div className="bg-amber-50/70 dark:bg-amber-950/30 py-1.5 px-1 rounded-lg border border-amber-100 dark:border-amber-900/40">
+              <div className="text-xs font-black text-amber-700 dark:text-amber-400">
+                {stats.neutral}
               </div>
               <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400 mt-0.5">
-                3 Point
+                3★
               </div>
             </div>
-            <div className="flex-1 bg-rose-50/70 dark:bg-rose-950/30 py-1.5 px-1 rounded-lg border border-rose-100 dark:border-rose-900/40">
-              <div className="text-xs font-black text-rose-700 dark:text-rose-400 flex items-center justify-center gap-1">
-                <span>😡</span> <span>{stats.dissatisfied}</span>
+            <div className="bg-rose-50/70 dark:bg-rose-950/30 py-1.5 px-1 rounded-lg border border-rose-100 dark:border-rose-900/40">
+              <div className="text-xs font-black text-rose-700 dark:text-rose-400">
+                {stats.dissatisfied}
               </div>
               <div className="text-[10px] font-bold text-rose-600 dark:text-rose-400 mt-0.5">
-                1 - 2 Point
+                1-2★
               </div>
             </div>
           </div>
@@ -1148,7 +1182,7 @@ export const CSATReport: React.FC = () => {
                 {paginatedRatingIssues.length > 0 ? (
                   paginatedRatingIssues.map((issue) => {
                     const isClosed = isSolvedOrClosed(issue.status);
-                    const r = issue.feedback_rating;
+                    const r = getIssueRating(issue);
                     const sat = issue.customer_satisfaction?.trim();
                     const res = issue.issue_resolved_confirmed?.trim();
 
@@ -1195,7 +1229,7 @@ export const CSATReport: React.FC = () => {
                               <Smile size={12} /> Excellent
                             </span>
                           ) : sat === 'Good' || sat === 'Satisfied' ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300">
                               <Smile size={12} /> {sat === 'Good' ? 'Good' : 'Satisfied'}
                             </span>
                           ) : sat === 'Average' || sat === 'Neutral' ? (

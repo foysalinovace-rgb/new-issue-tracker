@@ -890,10 +890,14 @@ const IssueReports: React.FC = () => {
                   <td className="px-4 py-2.5 whitespace-nowrap text-center">
                     {issue.feedback_rating ? (
                       <span className={`inline-flex items-center justify-center w-7 h-6 rounded-md font-extrabold text-xs border ${
-                        issue.feedback_rating >= 4
+                        issue.feedback_rating === 5
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+                          : issue.feedback_rating === 4
+                          ? 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-400 dark:border-teal-800'
                           : issue.feedback_rating === 3
                           ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'
+                          : issue.feedback_rating === 2
+                          ? 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-400 dark:border-orange-800'
                           : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800'
                       }`}>
                         {issue.feedback_rating}
@@ -908,7 +912,7 @@ const IssueReports: React.FC = () => {
                         issue.customer_satisfaction === 'Excellent'
                           ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700'
                           : issue.customer_satisfaction === 'Good' || issue.customer_satisfaction === 'Satisfied'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+                          ? 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800'
                           : issue.customer_satisfaction === 'Average' || issue.customer_satisfaction === 'Neutral'
                           ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'
                           : issue.customer_satisfaction === 'Poor'
